@@ -1,0 +1,33 @@
+<?php
+/**
+ * BrsZfSloth Configuration
+ *
+ * If you have a ./config/autoload/ directory set up for your project, you can
+ * drop this config file in it and change the values as you wish.
+ */
+$configuration = array(
+
+    /**
+     * Sloth lib path
+     */
+    //'sloth_lib_path' => './vendor/sloth',
+
+    /**
+     * End of BrsZfSloth configuration
+     */
+);
+
+/**
+ * You do not need to edit below this line
+ */
+return array(
+    'BrsZfSloth' => array(
+        'options' => $configuration,
+    )
+    // 'service_manager' => array(
+    //     'aliases' => array(
+    //         'brszfsloth_zend_db_adapter' => (isset($settings['zend_db_adapter'])) ? $settings['zend_db_adapter']: 'Zend\Db\Adapter\Adapter',
+    //     ),
+    // ),
+);
+
