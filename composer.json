@@ -1,7 +1,7 @@
 {
-    "name": "brszfsloth/brszfsloth",
+    "name": "brs/zfsloth",
     "homepage": "https://github.com/brssoftware/BrsZfSloth",
-    "description": "Simple ORM for Zend Framework 2",
+    "description": "Simple ORM module for Zend Framework 2",
     "type": "library",
     "license": "BSD-3-Clause",
     "keywords": [
