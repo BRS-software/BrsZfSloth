@@ -1,5 +1,5 @@
 {
-    "name": "brs/brs-zf-sloth",
+    "name": "brs-software/brs-zf-sloth",
     "homepage": "https://github.com/brssoftware/BrsZfSloth",
     "description": "Simple ORM module for Zend Framework 2",
     "type": "library",
