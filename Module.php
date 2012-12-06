@@ -1,6 +1,5 @@
 <?php
-
-namespace BrsZend;
+namespace BrsZfSloth;
 
 require_once __DIR__ . '/src/Brs/Zend/Module/AbstractModule.php';
 
