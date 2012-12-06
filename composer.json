@@ -5,6 +5,7 @@
     "type": "library",
     "license": "BSD-3-Clause",
     "keywords": [
+        "zf2",
         "brs",
         "orm"
     ],
