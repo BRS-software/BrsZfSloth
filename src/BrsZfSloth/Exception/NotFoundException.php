@@ -2,9 +2,6 @@
 
 namespace BrsZfSloth\Exception;
 
-class NotFoundException
-    extends \LogicException
-    implements ExceptionInterface
+class NotFoundException extends \LogicException implements ExceptionInterface
 {
-
 }
