@@ -143,6 +143,15 @@ class Assert
         }
         return $value;
     }
+
+    public static function arra($value, $message = 'Value %s is not a array')
+    {
+        if (! is_array($value)) {
+            throw new AssertException(sprintf($message, self::valueToString($value)));
+        }
+        return $value;
+    }
+
     public static function valueToString($value)
     {
         $type = gettype($value);

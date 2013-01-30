@@ -20,6 +20,7 @@ class Field extends AbstractOptions
     const TYPE_DATE = 'date';
     const TYPE_DATETIME = 'datetime';
     const TYPE_TIMESTAMP = 'timestamp';
+    const TYPE_ARRAY = 'array';
 
     public static $types = [
         self::TYPE_INTEGER => [
@@ -51,7 +52,10 @@ class Field extends AbstractOptions
         self::TYPE_TIMESTAMP => [
             'assert' => 'date',
             'assertParams' => ['Y-m-d H:i:s'],
-            // 'assertParams' => ['Y-m-d H:i:s'],
+        ],
+        self::TYPE_ARRAY => [
+            'assert' => 'arra',
+            'hydratorStrategyClass' => 'BrsZfSloth\Hydrator\Strategy\Arra',
         ],
     ];
 
