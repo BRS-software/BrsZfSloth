@@ -81,6 +81,61 @@ class EntityTest extends \PHPUnit_Framework_TestCase
         );
     }
 
+    public function testSerializeWithDefinition()
+    {
+        $definition = new Definition([
+            'name' => 'test',
+            'table' => 'test',
+            'hydratorClass' => 'BrsZfSloth\Hydrator\Hydrator',
+            'entityClass' => 'BrsZfSloth\Entity\Entity',
+            'fields' => [
+                'id' => 'integer',
+                'name' => 'text',
+            ]
+        ]);
+
+        $entity = (new TestAsset\TestEntitySloth)
+            ->setDefinition($definition)
+            ->populate([
+                'id' => 1,
+                // 'name' => null,
+            ])
+            // ->markAsOrigin()
+        ;
+
+        $serialEntity = serialize($entity);
+        // must be serialize with whole object definition
+        $this->assertTrue(is_int(strpos($serialEntity, 'BrsZfSloth\Definition\Definition')));
+
+        $unserialEntity = unserialize($serialEntity);
+        $this->assertEquals(1, $unserialEntity->getId());
+        $this->assertInstanceOf(get_class($definition), $entity->getDefinition());
+
+    }
+
+    public function testSerializeWithDefinitionComesFromFile()
+    {
+        Sloth::getOptions()->addDefinitionsPath(__DIR__ . '/TestAsset');
+        $definition = Definition::getCachedInstance('testDefinition');
+
+        $entity = (new TestAsset\TestEntitySloth)
+            ->setDefinition($definition)
+            ->populate([
+                'id' => 1
+            ])
+            // ->markAsOrigin()
+        ;
+
+        $serialEntity = serialize($entity);
+
+        // must be serialize only name of definition
+        $this->assertTrue(is_int(strpos($serialEntity, 'testDefinition')));
+
+        $unserialEntity = unserialize($serialEntity);
+        $this->assertEquals(1, $unserialEntity->getId());
+        $this->assertInstanceOf(get_class($definition), $entity->getDefinition());
+    }
+
     // public function testGetChanges()
     // {
     //     $definition = new Definition([

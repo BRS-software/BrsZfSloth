@@ -29,6 +29,7 @@ class DefinitionTest extends \PHPUnit_Framework_TestCase
      */
     public function testDiscoverDefinitionFail()
     {
+        Sloth::getOptions()->addDefinitionsPath(__DIR__ . '/TestAsset');
         Definition::discoverConfig('failname');
     }
 
@@ -37,7 +38,7 @@ class DefinitionTest extends \PHPUnit_Framework_TestCase
      */
     public function testDiscoverDefinitionUnsupported()
     {
-        Sloth::getOptions()->addDiscoverDefinitionsPath(__DIR__ . '/TestAsset');
+        Sloth::getOptions()->addDefinitionsPath(__DIR__ . '/TestAsset');
         Definition::discoverConfig('testDefinitionUnsupported');
     }
 
@@ -52,7 +53,7 @@ class DefinitionTest extends \PHPUnit_Framework_TestCase
 
     public function testCreateCachedInstanceFromName()
     {
-        Sloth::getOptions()->addDiscoverDefinitionsPath(__DIR__ . '/TestAsset');
+        Sloth::getOptions()->addDefinitionsPath(__DIR__ . '/TestAsset');
 
         // mprd(Sloth::getOptions()->toarray());
         $def = Definition::getCachedInstance('testDefinition');
@@ -107,7 +108,7 @@ class DefinitionTest extends \PHPUnit_Framework_TestCase
      */
     public function testCreateCachedInstanceFromArrayFail()
     {
-        Sloth::getOptions()->addDiscoverDefinitionsPath(__DIR__ . '/TestAsset');
+        Sloth::getOptions()->addDefinitionsPath(__DIR__ . '/TestAsset');
 
         $def = Definition::getCachedInstance([
             'name' => 'testDefinition',

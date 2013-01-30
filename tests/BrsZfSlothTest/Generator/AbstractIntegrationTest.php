@@ -73,12 +73,11 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
 
         $descriptor = $this->getDescriptor($this->adapter);
         $dbData = $descriptor->describeDatabase();
-        mprd($dbData);
+        // dbgd($dbData);
 
-
-        $this->assertEquals($this->testTableName, $dConfig['name']);
-        $this->assertEquals($this->testTableName, $dConfig['table']);
-        $this->assertEquals(5, count($dConfig['fields']));
+        $this->assertEquals('public', $dbData[0]['schema']);
+        $this->assertEquals($this->testTableName, $dbData[0]['table']);
+        // $this->assertEquals(5, count($dConfig['fields']));
     }
 
     public function testDescribeTable()

@@ -61,6 +61,14 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
             ))
         ;
 
+        $options
+            ->expects($this->exactly(1))
+            ->method('getClearCacheOnEvents')
+            ->will($this->returnValue(
+                []
+            ))
+        ;
+
         $r = new Repository($options);
 
         $this->assertInstanceOf('BrsZfSloth\Definition\Definition', $r->getDefinition());
@@ -201,6 +209,13 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
             ->method('getEventManager')
             ->will($this->returnValue(
                 $this->getMockEventManager()
+            ))
+        ;
+        $options
+            ->expects($this->exactly(1))
+            ->method('getClearCacheOnEvents')
+            ->will($this->returnValue(
+                []
             ))
         ;
         return $options;
