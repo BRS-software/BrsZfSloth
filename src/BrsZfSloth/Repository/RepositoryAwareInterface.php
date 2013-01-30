@@ -3,5 +3,5 @@ namespace BrsZfSloth\Repository;
 
 interface RepositoryAwareInterface
 {
-    public function setRepository(Repository $repository);
+    public function setRepository(RepositoryInterface $repository);
 }

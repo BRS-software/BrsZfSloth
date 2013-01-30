@@ -3,6 +3,7 @@ namespace BrsZfSloth\Repository;
 
 use BrsZfSloth\Definition\DefinitionAwareInterface;
 use BrsZfSloth\Sql\Where;
+use BrsZfSloth\Sql\Expr;
 
 interface RepositoryInterface extends DefinitionAwareInterface
 {
@@ -61,6 +62,10 @@ interface RepositoryInterface extends DefinitionAwareInterface
     public function exists($entity);
 
     public function save($entity);
+
+    public function get($where, $val = Expr::UNDEFINED);
+
+    public function fetch($where = null, $val = Expr::UNDEFINED);
 
     // public function get($where);
     // public function getBy($field, $value);
