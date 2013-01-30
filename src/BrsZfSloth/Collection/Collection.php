@@ -11,7 +11,7 @@ use BrsZfSloth\Exception;
 use BrsZfSloth\Exception\ExceptionTools;
 use BrsZfSloth\Definition\Definition;
 use BrsZfSloth\Definition\DefinitionAwareInterface;
-use BrsZfSloth\Repository\Repository;
+use BrsZfSloth\Repository\RepositoryInterface;
 use BrsZfSloth\Repository\RepositoryAwareInterface;
 
 class Collection implements
@@ -71,7 +71,7 @@ class Collection implements
         }
     }
 
-    public function setRepository(Repository $repository)
+    public function setRepository(RepositoryInterface $repository)
     {
         $this->__repository = $repository;
         return $this;
@@ -359,7 +359,7 @@ class Collection implements
     public function offsetSet($offset, $entity)
     {
         if (! $entity instanceof $this->__allowedEntityClass) {
-            throw new Exception\InvalidObjectException(
+            throw new Exception\DomainException(
                 sprintf('Entity is no instance of %s, %s given', $this->__allowedEntityClass, get_class($entity))
             );
         }
