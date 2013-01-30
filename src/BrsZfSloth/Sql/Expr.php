@@ -66,11 +66,15 @@ class Expr implements PredicateInterface
         if (null === $alias) {
             $alias = $definition->getName();
         }
-        if (! $force && array_key_exists($alias, $this->definitions)) {
+
+        if (! array_key_exists($alias, $this->definitions) || $force) {
+            $this->definitions[$alias] = $definition;
+
+        } elseif (spl_object_hash($this->definitions[$alias]) !== spl_object_hash($definition)) {
             throw new Exception\RuntimeException(
-                ExceptionTools::msg('definition under alias %s already existst in expr %s', $alias, $this));
+                ExceptionTools::msg('definition under alias %s already existst in expr %s', $alias, $this)
+            );
         }
-        $this->definitions[$alias] = $definition;
         return $this;
     }
 
