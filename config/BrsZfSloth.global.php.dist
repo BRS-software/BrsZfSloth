@@ -5,29 +5,44 @@
  * If you have a ./config/autoload/ directory set up for your project, you can
  * drop this config file in it and change the values as you wish.
  */
-$configuration = array(
+$configuration = [
 
     /**
-     * Sloth lib path
+     * Paths to saving definitions configuration
      */
-    //'sloth_lib_path' => './vendor/sloth',
+    // 'definitions_paths' => [],
+
+    /**
+     * Ignore db tables while generating the definitions
+     */
+    // 'definition_generator_ignored_db_tables' => [],
+
+    /**
+     * Enable/disable definition object caching
+     */
+    // 'definition_caching' => true,
+
+    /**
+     * Enable/disable data caching
+     */
+    // 'data_caching' => true,
 
     /**
      * End of BrsZfSloth configuration
      */
-);
+];
 
 /**
  * You do not need to edit below this line
  */
-return array(
-    'BrsZfSloth' => array(
+return [
+    'BrsZfSloth' => [
         'options' => $configuration,
-    )
+    ]
     // 'service_manager' => array(
     //     'aliases' => array(
     //         'brszfsloth_zend_db_adapter' => (isset($settings['zend_db_adapter'])) ? $settings['zend_db_adapter']: 'Zend\Db\Adapter\Adapter',
     //     ),
     // ),
-);
+];
 
