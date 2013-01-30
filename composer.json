@@ -10,15 +10,15 @@
         "orm"
     ],
     "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/BRS-software/BrsZfBase.git"
-        }
+        {"type": "vcs", "url": "https://github.com/BRS-software/BrsZfBase.git"},
+        {"type": "vcs", "url": "https://github.com/BRS-software/BrsZf.git"}
     ],
     "require": {
         "php": ">=5.4",
+        "underscore/Underscore.php": "dev-master",
         "zendframework/zendframework": "2.*",
-        "brs-software/brs-zf-base": "@dev"
+        "brs-software/brs-zf-base": "@dev",
+        "brs-software/brs-zf": "@dev"
     },
     "require-dev": {
         "phpunit/PHPUnit": "3.7.*"
