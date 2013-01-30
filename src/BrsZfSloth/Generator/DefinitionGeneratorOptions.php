@@ -9,12 +9,15 @@ use BrsZfSloth\Exception;
 use BrsZfSloth\Exception\ExceptionTools;
 use BrsZfSloth\Options as DefaultOptions;
 use BrsZfSloth\Generator\Descriptor\AbstractDescriptor;
+use BrsZfSloth\Definition\Definition;
 
 class DefinitionGeneratorOptions extends AbstractOptions
 {
+    protected $defaultOptions;
     protected $dbAdapter;
     protected $descriptor;
     protected $savePath;
+    protected $ignoredTables = [];
     protected $allowReplaceExistingConfig = false;
     protected $fullRebuildExistingConfig = false; // false nothing to do (see rebuildFieldsExistingConfig), true replace all config
     protected $rebuildFieldsExistingConfig = false; // false add not existing fields, true replace all
@@ -50,9 +53,12 @@ class DefinitionGeneratorOptions extends AbstractOptions
     public function getDbAdapter()
     {
         if (null === $this->dbAdapter) {
-            throw new Exception\RuntimeException(
-                'db adapter not set'
+            $this->setDbAdapter(
+                $this->getDefaultOptions()->getDefaultDbAdapter()
             );
+            // throw new Exception\RuntimeException(
+            //     'db adapter not set'
+            // );
         }
         return $this->dbAdapter;
     }
@@ -92,6 +98,31 @@ class DefinitionGeneratorOptions extends AbstractOptions
             );
         }
         return $this->savePath;
+    }
+
+    public function addIgnoredTable($table)
+    {
+        if (false === strpos($table, '.')) {
+            $table = Definition::DEFAULT_SCHEMA . '.' . $table;
+        }
+        $this->ignoredTables[] = $table;
+        return $this;
+    }
+
+    public function setIgnoredTables(array $tables)
+    {
+        array_walk($tables, function($table) {
+            $this->addIgnoredTable($table);
+        });
+        return $this;
+    }
+
+    public function getIgnoredTables()
+    {
+        return array_unique(array_merge(
+            $this->getDefaultOptions()->getDefinitionGeneratorIgnoredDbTables(),
+            $this->ignoredTables
+        ));
     }
 
     public function setAllowReplaceExistingConfig($flag)

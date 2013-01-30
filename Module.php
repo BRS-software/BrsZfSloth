@@ -1,43 +1,56 @@
 <?php
 namespace BrsZfSloth;
 
-require_once __DIR__ . '/src/Brs/Zend/Module/AbstractModule.php';
+use RuntimeException;
 
-use Brs\Zend\Module\AbstractModule;
 use Zend\ModuleManager\ModuleManager;
 use Zend\Mvc\ApplicationInterface;
 use Zend\Loader\AutoloaderFactory;
+use Zend\ModuleManager\Feature\ConsoleBannerProviderInterface;
+use Zend\Console\Adapter\AdapterInterface as Console;
 
-use RuntimeException;
+use BrsZfBase\Module\AbstractModule;
 use BrsZfSloth\Sloth;
 use BrsZfSloth\Options as SlothOptions;
 
-class Module extends AbstractModule
+class Module extends AbstractModule implements ConsoleBannerProviderInterface
 {
+    public function getConsoleBanner(Console $console)
+    {
+        return <<<EOF
+==--------==
+BRS ZF SLOTH
+==--------==
+usage:
+sloth definition init [--skip-existing]         init all db tables
+sloth definition generate <table>               generate definition for table
+sloth definition clearcache <definitionName>    clear definition cache
+sloth definition flushcache                     flush all definitions cache
+EOF;
+    }
+
     public function getDir()
     {
         return __DIR__;
     }
+
     public function getNamespace()
     {
-        return 'Brs\Zend';
+        return __NAMESPACE__;
     }
 
     public function bootstrap(ModuleManager $moduleManager, ApplicationInterface $app)
     {
         $sm = $app->getServiceManager();
-        // $options = $sm->get('BrsZfSloth_module_options');
+        $slothOptions = $this->getOptions();
+        $slothOptions['default_db_adapter'] = $sm->get($this->getOption('default_db_adapter'));
+        $slothOptions['default_service_manager'] = $sm;
+        // dbgd($slothOptions['definition_generator_ignored_db_tables']);
 
-        // debuge($this->getOption('Sloth'));
-        debuge($sm->setDbAdapter($sm->get('Zend\Db\Adapter\Adapter')));
         Sloth::configure(
-            (new SlothOptions)
-                // ->setCaching(is_production())
-                ->setEventManager($app->getEventManager())
-                ->setDbAdapter($sm->get($this->getOption('Sloth.defaultDbAdapter')))
+            (new SlothOptions($slothOptions))
+                // ->setDefinitionCaching(true) // XXX is_production
         );
-        // debuge($q=$sm->get('Zend\Db\Adapter\Adapter')->query('select * from user'));
-        // debuge($sm->get('Zend\Db\Adapter\Adapter')->getDriver()->createResult($q));
     }
 
     // public function bootstrap(ModuleManager $moduleManager, ApplicationInterface $app)
@@ -74,23 +87,20 @@ class Module extends AbstractModule
 
     public function getServiceConfig()
     {
-        // debuge($this->getMergedConfig());
-        return array();
-
-        $that = $this;
         return array(
-            'factories' => array(
-                'BrsZfSloth_module_options' => function ($sm) use ($that) {
-                    //$config = $sm->get('Config');
-                    return new Options\ModuleOptions($that->getOptions());
-                },
-                // 'db-adapter' => function($sm) {
-                //     $config = $sm->get('config');
-                //     $config = $config['db'];
-                //     $dbAdapter = new DbAdapter($config);
-                //     return $dbAdapter;
-                // },
-            ),
+            // 'factories' => array(
+            //     'BrsZfSloth_options' => function ($sm) {
+            //         //$config = $sm->get('Config');
+            //         // dbgd($this->getOptions());
+            //         return new Options\ModuleOptions($this->getOptions());
+            //     },
+            //     // 'db-adapter' => function($sm) {
+            //     //     $config = $sm->get('config');
+            //     //     $config = $config['db'];
+            //     //     $dbAdapter = new DbAdapter($config);
+            //     //     return $dbAdapter;
+            //     // },
+            // ),
         );
     }
 }

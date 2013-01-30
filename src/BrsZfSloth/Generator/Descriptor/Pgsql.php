@@ -12,10 +12,15 @@ class Pgsql extends AbstractDescriptor
 {
     protected static $typesMap = [
         'timestamp without time zone' => Field::TYPE_TIMESTAMP,
+        'timestamp with time zone' => Field::TYPE_TIMESTAMP,
+        'date' => Field::TYPE_DATE,
         'integer' => Field::TYPE_INTEGER,
         'character varying' => Field::TYPE_CHARACTER_VARYING,
+        'character' => Field::TYPE_CHARACTER_VARYING,
         'boolean' => Field::TYPE_BOOLEAN,
         'text' => Field::TYPE_TEXT,
+        'array' => Field::TYPE_ARRAY,
+        'smallint' => Field::TYPE_SMALLINT,
     ];
 
     public function describeDatabase($schema = Definition::DEFAULT_SCHEMA)
@@ -48,6 +53,12 @@ class Pgsql extends AbstractDescriptor
             )
         )->execute();
 
+        if (0 === count($query)) {
+            throw new Exception\NotFoundException(
+                ExceptionTools::msg('table %s.%s not found in %s', $schema, $tableName, $this->getDsn())
+            );
+        }
+
         $tableData = [];
 
         /*
@@ -62,7 +73,8 @@ class Pgsql extends AbstractDescriptor
         ]);
         */
         foreach ($query as $f) {
-            // mpr($f);
+            $f['data_type'] = strtolower($f['data_type']);
+
             if (! isset(self::$typesMap[$f['data_type']])) {
                 throw new Exception\UnmappedException(
                     ExceptionTools::msg('unmapped data type "%s" in %s', $f['data_type'], $this)

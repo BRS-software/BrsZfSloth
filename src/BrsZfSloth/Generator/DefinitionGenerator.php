@@ -22,6 +22,14 @@ class DefinitionGenerator
         $this->options = new DefinitionGeneratorOptions($options);
     }
 
+    /**
+     * Perform a deep clone
+     */
+    public function __clone()
+    {
+        $this->options = clone $this->options;
+    }
+
     public function getOptions()
     {
         return $this->options;
@@ -42,8 +50,7 @@ class DefinitionGenerator
         //         'firstName' => 'text',
         //     ]
         // ]);
-
-        $fieldsConfig = $this->getOptions()->getDescriptor()->describeTable($tableName, $tableSchema);
+        $table = $this->getOptions()->getDescriptor()->describeTable($tableName, $tableSchema);
         // foreach ($this->getDescriptor()->describeTable($tableName, $tableSchema) as $field) {
         //     $fieldsConfig[] = $field;
         // }
@@ -69,11 +76,12 @@ class DefinitionGenerator
             ),
             'defaultOrder' => $this->askViaConsole(
                 ['id' => SORT_ASC],
-                function($console) use ($fieldsConfig) {}
+                function($console) use ($table) {}
             ),
-            'fields' => $fieldsConfig,
         ];
-
+        if (isset($table['fields'])) {
+            $definitionConfig['fields'] = $table['fields'];
+        }
         return $definitionConfig;
     }
 
@@ -90,12 +98,41 @@ class DefinitionGenerator
             DefinitionTools::getDefinitionFromParam($definition)
         );
 
-        $fileName = sprintf('%s/%s.json', $this->getOptions()->getSavePath(), $newDefinition->getName());
+        $fileName = $this->getFileName($newDefinition);
         $result = file_put_contents(
             $fileName,
             json_encode($newDefinition->export(), JSON_PRETTY_PRINT)
         );
         return $fileName;
+    }
+
+    public function getFileName(Definition $definition)
+    {
+        return sprintf('%s/%s.json', $this->getOptions()->getSavePath(), $definition->getName());
+    }
+
+    public function getModuleForTable($tableSchema, $tableName)
+    {
+        $table = $tableSchema . '.' . $tableName;
+
+        foreach ($this->getOptions()->getDefaultOptions()->getModules() as $module) {
+            if (in_array($table, $module->getDbTables())) {
+                return $module;
+            }
+        }
+
+        throw new Exception\RuntimeException(
+            ExceptionTools::msg('module not exists for db table %s', $table)
+        );
+    }
+
+    public function isIgnoredTable($tableSchema, $tableName)
+    {
+        // dbgd(func_get_args());
+        return in_array(
+            $tableSchema . '.' . $tableName,
+            $this->getOptions()->getIgnoredTables()
+        );
     }
 
     protected function getDefinitionIncludingOptions(Definition $newDefinition)
