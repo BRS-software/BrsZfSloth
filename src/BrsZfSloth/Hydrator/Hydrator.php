@@ -7,7 +7,7 @@ use BrsZfSloth\Exception;
 use BrsZfSloth\Exception\ExceptionTools;
 use BrsZfSloth\Definition\Definition;
 use BrsZfSloth\Definition\DefinitionTools;
-use BrsZfSloth\Entity\Entity;
+use BrsZfSloth\Entity\EntityTraitInterface;
 use BrsZfSloth\Definition\DefinitionAwareInterface;
 
 class Hydrator extends AbstractHydrator implements DefinitionAwareInterface
@@ -118,9 +118,9 @@ class Hydrator extends AbstractHydrator implements DefinitionAwareInterface
 
     protected function assertEntity($object)
     {
-        if (! $object instanceof Entity) {
+        if (! $object instanceof EntityTraitInterface) {
             throw new Exception\InvalidArgumentException(
-                sprintf('hydrator %s supports only entities instance of Brs\Zend\Sloht\Entity\Entity, given %s', get_class($this), is_object($object) ? get_class($object) : gettype($object))
+                sprintf('hydrator %s supports only entities instance of Brs\Zend\Sloht\Entity\EntityTraitInterface, given %s', get_class($this), is_object($object) ? get_class($object) : gettype($object))
             );
         }
     }
