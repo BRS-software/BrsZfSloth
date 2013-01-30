@@ -1,6 +1,7 @@
 <?php
 namespace BrsZfSloth\Definition;
 
+use __;
 use Countable;
 use SeekableIterator;
 use ArrayAccess;
@@ -14,6 +15,7 @@ use Zend\Cache\Storage\FlushableInterface as CacheFlushable;
 use Zend\Cache\Storage\ClearByNamespaceInterface as CacheClearByNamespace;
 
 use BrsZfSloth\Exception;
+use BrsZfSloth\Exception\ExceptionTools;
 use BrsZfSloth\Sloth;
 use BrsZfSloth\Sql\Order;
 use BrsZfSloth\Hydrator\Hydrator;
@@ -43,6 +45,11 @@ class Definition implements
 
     public static function reset()
     {
+        self::flushCache();
+    }
+
+    public static function flushCache()
+    {
         $cache = Sloth::getOptions()->getDefinitionCache();
         if ($cache instanceof CacheClearByNamespace) {
             $cache->clearByNamespace($cache->getOptions()->getNamespace());
@@ -53,6 +60,11 @@ class Definition implements
                 'cache adapter could not be flushed'
             );
         }
+    }
+
+    public static function clearCache($definitionName)
+    {
+        Sloth::getOptions()->getDefinitionCache()->removeItem($definitionName);
     }
 
     public static function factory($definition)
@@ -92,7 +104,7 @@ class Definition implements
         }
 
         $cache = Sloth::getOptions()->getDefinitionCache();
-        // $cache->setcaching(false);
+        // dbgd($cache->getCaching());
 
         if ($cache->hasItem($definitionName)) {
             return $cache->getItem($definitionName);
@@ -109,7 +121,7 @@ class Definition implements
     public static function discoverConfig($name, $path = null)
     {
         if (null === $path) {
-            $paths = Sloth::getOptions()->getDiscoverDefinitionsPaths();
+            $paths = Sloth::getOptions()->getDefinitionsPaths(true);
         } elseif (is_string($path)) {
             $paths = [$path];
         } else {
@@ -124,9 +136,12 @@ class Definition implements
                 if ($fileinfo->isFile() && $basename === $name) {
                     switch (strtolower($fileinfo->getExtension())) {
                         case 'json':
-                            // mprd($fileinfo->getPathname());
-                            // mprd((array) json_decode(file_get_contents($fileinfo->getPathname())));
                             $config = json_decode(file_get_contents($fileinfo->getPathname()), true);
+                            if (! is_array($config)) {
+                                throw new Exception\IncorrectDefinitionException(
+                                    sprintf('file %s has no informations about definition or json format is invalid', $fileinfo->getPathname())
+                                );
+                            }
                             break;
                         default:
                             throw new Exception\UnsupportedException(
@@ -198,20 +213,20 @@ class Definition implements
 
         if (isset($definitionConfig['schema'])) {
             $this->schema = $definitionConfig['schema'];
-            unset($definitionConfig['schema']);
         }
+        unset($definitionConfig['schema']);
 
         if (isset($definitionConfig['origin_file'])) {
             $this->originFile = $definitionConfig['origin_file'];
-            unset($definitionConfig['origin_file']);
         }
+        unset($definitionConfig['origin_file']);
 
         if (isset($definitionConfig['fields'])) {
             $fields = $definitionConfig['fields'];
-            unset($definitionConfig['fields']);
         } else {
             $fields = [];
         }
+        unset($definitionConfig['fields']);
 
         // forward cofig to options (config replace options previously set)
         $this->getOptions()->setFromArray($definitionConfig);
@@ -229,6 +244,13 @@ class Definition implements
             }
             $this->addField($v);
         }
+    }
+
+    public function __toString()
+    {
+        return $this->getName();
+        // return sprintf('%s: %s.%s', $this->getName(), $this->getSchema(), $this->getTable());
+
     }
 
     public function getOptions()

@@ -15,6 +15,7 @@ class Cache
 {
     protected $storage;
     protected $namespace;
+    protected $namespaceSeparator = '||';
 
     public static function factory(Repository $repository)
     {
@@ -23,7 +24,6 @@ class Cache
             $repository->getOptions()->getCache(),
             [$repository->getDsn(), get_class($repository)]
         );
-        // mprd($repository->getOptions()->getClearCacheOnEvents());
         foreach ($repository->getOptions()->getClearCacheOnEvents() as $event) {
             $repository->getEventManager()->attach($event, function($e) use ($cache) {
                 $cache->clearStorage();
@@ -37,8 +37,13 @@ class Cache
     public function __construct(CacheStorage $storage, $namespace)
     {
         $this->storage = $storage;
-        $this->namespace = join($this->storage->getOptions()->getNamespaceSeparator(), (array) $namespace);
+        $this->namespace = join($this->getNamespaceSeparator(), (array) $namespace);
         $this->storage->getOptions()->setNamespace($this->getNamespace());
+    }
+
+    public function getNamespaceSeparator()
+    {
+        return $this->namespaceSeparator;
     }
 
     public function getNamespace()
@@ -50,7 +55,7 @@ class Cache
     {
         $args = func_get_args();
         array_unshift($args, $this->getNamespace());
-        return join($args, $this->storage->getOptions()->getNamespaceSeparator());
+        return join($args, $this->getNamespaceSeparator());
     }
 
     public function getStorage()
