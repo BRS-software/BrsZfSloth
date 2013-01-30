@@ -1,45 +1,66 @@
 <?php
 namespace BrsZfSloth;
 
+use Closure;
+use __;
+
 use Zend\Stdlib\AbstractOptions;
 use Zend\EventManager\EventManager;
 use Zend\Db\Adapter\Adapter as DbAdapter;
 use Zend\Cache\StorageFactory as CacheFactory;
 use Zend\Cache\Storage\Adapter\AbstractAdapter as CacheAdapter;
+use Zend\ServiceManager\ServiceManager;
 
 use BrsZfSloth\Exception;
+use BrsZfSloth\Definition\Definition;
+use BrsZfSloth\Module\ModuleInterface;
 
 class Options extends AbstractOptions
 {
-    protected $discoverDefinitionsPaths = array();
     protected $defaultEntityClass = 'BrsZfSloth\Entity\Entity'; // or StdClass or AnyClass
     protected $defaultCollectionClass = 'BrsZfSloth\Collection\Collection';
     protected $defaultHydratorClass = 'BrsZfSloth\Hydrator\Hydrator'; // or 'Zend\Stdlib\Hydrator\*';
     protected $defaultDbAdapter;
     protected $defaultEventManagerClass = 'Zend\EventManager\EventManager';
+    protected $defaultServiceManager;
 
     protected $dataCaching = false;
     protected $dataCacheConfig = [
+        // 'adapter' => [
+        //     'name' => 'filesystem',
+        //     'options' => [
+        //         'cacheDir' => 'data/cache',
+        //         'dirPermission' => 0755,
+        //         'filePermission' => 0664,
+        //         // 'namespace' => 'sloth',
+        //         // 'namespaceSeparator' => '|'
+        //     ],
+        // ]
         'adapter' => [
             'name' => 'apc',
             'options' => [
                 // 'namespace' => 'sloth',
-                'namespaceSeparator' => '|'
+                // 'namespaceSeparator' => '|'
             ],
         ]
     ];
 
+    protected $definitionsPaths = array();
     protected $definitionCaching = false;
     protected $definitionCache;
     protected $definitionCacheConfig = [
         'adapter' => [
             'name' => 'apc',
             'options' => [
+                'namespace' => 'BrsZfSloth|DefinitionCache',
                 // 'namespace' => 'sloth',
-                'namespaceSeparator' => '|'
+                // 'namespaceSeparator' => '|'
             ],
         ]
     ];
+
+    protected $definitionGeneratorIgnoredDbTables = [];
+    protected $modules = [];
 
     public function setDataCacheConfig(array $config)
     {
@@ -65,6 +86,7 @@ class Options extends AbstractOptions
     public function setDefinitionCaching($flag)
     {
         $this->definitionCaching = (bool) $flag;
+        return $this;
     }
 
     public function getDefinitionCaching()
@@ -76,32 +98,67 @@ class Options extends AbstractOptions
     {
         if (null === $this->definitionCache) {
             $options = $this->getDefinitionCacheConfig();
-            $options['adapter']['options']['namespace'] = join(
-                array('BrsZfSloth', 'definitionCache'),
-                $options['adapter']['options']['namespaceSeparator']
-            );
 
             $this->definitionCache = CacheFactory::factory($options);
-            $this->definitionCache->setCaching($this->definitionCaching);
+            $this->definitionCache->setCaching($this->getDefinitionCaching());
         }
         return $this->definitionCache;
     }
 
-    public function addDiscoverDefinitionsPath($path)
+    public function addDefinitionsPath($path)
     {
-        $this->discoverDefinitionsPaths[] = $path;
+        // $this->definitionsPaths[] = realpath($path);
+        $this->definitionsPaths[] = $path;
+        $this->definitionsPaths = array_unique($this->definitionsPaths);
         return $this;
     }
 
-    public function setDiscoverDefinitionsPaths(array $paths)
+    public function setDefinitionsPaths(array $paths)
     {
-        $this->discoverDefinitionsPaths = $paths;
+        $this->definitionsPaths = [];
+        array_walk($paths, function($v) {
+            $this->addDefinitionsPath($v);
+        });
         return $this;
     }
 
-    public function getDiscoverDefinitionsPaths()
+    public function getDefinitionsPaths($addModulesPath = false)
     {
-        return $this->discoverDefinitionsPaths;
+        $paths = $this->definitionsPaths;
+
+        // search also in modules
+        foreach ($this->getModules() as $module) {
+            $paths[] = $module->getDefinitionsPath();
+        }
+
+        if (empty($paths)) {
+            throw new Exception\NotSetException('No set any definition path');
+        }
+        return array_unique($paths);
+    }
+
+    public function setModules(array $modules)
+    {
+        array_walk($modules, function($module) {
+            $this->addModule($module);
+        });
+        return $this;
+    }
+
+    public function addModule(ModuleInterface $module)
+    {
+        if (array_key_exists($module->getSlothModuleName(), $this->modules)) {
+            throw new Exception\RuntimeException(
+                sprintf('module %s already exists', $module->getSlothModuleName())
+            );
+        }
+        $this->modules[$module->getSlothModuleName()] = $module;
+        return $this;
+    }
+
+    public function getModules()
+    {
+        return $this->modules;
     }
 
     public function setDefaultDbAdapter(DbAdapter $adapter)
@@ -144,6 +201,22 @@ class Options extends AbstractOptions
     public function getDefaultEntityClass()
     {
         return $this->defaultEntityClass;
+    }
+
+    public function setDefaultServiceManager(ServiceManager $serviceManager)
+    {
+        $this->defaultServiceManager = $serviceManager;
+        return $this;
+    }
+
+    public function getDefaultServiceManager()
+    {
+        if (null === $this->defaultServiceManager) {
+            throw new Exception\RuntimeException(
+                'default service manager not set'
+            );
+        }
+        return $this->defaultServiceManager;
     }
 
     public function setDefaultCollectionClass($class)
@@ -192,5 +265,36 @@ class Options extends AbstractOptions
     public function getDefaultEventManagerClass()
     {
         return $this->defaultEventManagerClass;
+    }
+
+    public function addDefinitionGeneratorIgnoredDbTable($table)
+    {
+        if (false === strpos($table, '.')) {
+            $table = Definition::DEFAULT_SCHEMA . '.' . $table;
+        }
+        $this->definitionGeneratorIgnoredDbTables[] = $table;
+        $this->definitionGeneratorIgnoredDbTables = array_unique($this->definitionGeneratorIgnoredDbTables);
+        return $this;
+    }
+
+    public function setDefinitionGeneratorIgnoredDbTables(array $tables)
+    {
+        array_walk($tables, function($table) {
+            $this->addDefinitionGeneratorIgnoredDbTable($table);
+        });
+        return $this;
+    }
+
+    public function getDefinitionGeneratorIgnoredDbTables()
+    {
+        $modulesTables = [];
+        array_walk($this->getModules(), function($module) use (&$modulesTables) {
+            $modulesTables = array_merge($modulesTables, $module->getDbTables());
+        });
+
+        return array_unique(array_merge(
+            $this->definitionGeneratorIgnoredDbTables,
+            $modulesTables
+        ));
     }
 }

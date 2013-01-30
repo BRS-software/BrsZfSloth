@@ -7,6 +7,8 @@ use Zend\Stdlib\AbstractOptions;
 // use Zend\Cache\StorageFactory as CacheFactory;
 use Zend\Db\Adapter\Adapter as DbAdapter;
 use Zend\EventManager\EventManager;
+use Zend\ServiceManager\ServiceManager;
+
 use Zend\Cache\StorageFactory as CacheFactory;
 use Zend\Cache\Storage\StorageInterface as CacheStorage;
 
@@ -23,6 +25,7 @@ class RepositoryOptions extends AbstractOptions
     protected $definition;
     protected $eventManager;
     protected $eventManagerClass;
+    protected $serviceManager;
     protected $caching; // enable/disable data cache
     protected $cache; // cache entities objects
     protected $clearCacheOnEvents = ['post.update', 'post.delete'];
@@ -107,6 +110,20 @@ class RepositoryOptions extends AbstractOptions
             $this->setEventManagerClass($this->getDefaultOptions()->getDefaultEventManagerClass());
         }
         return $this->eventManagerClass;
+    }
+
+    public function setServiceManager(ServiceManager $serviceManager)
+    {
+        $this->serviceManager = $serviceManager;
+        return $this;
+    }
+
+    public function getServiceManager()
+    {
+        if (null === $this->serviceManager) {
+            $this->setServiceManager($this->getDefaultOptions()->getDefaultServiceManager());
+        }
+        return $this->serviceManager;
     }
 
     public function setCache(CacheStorage $cache)

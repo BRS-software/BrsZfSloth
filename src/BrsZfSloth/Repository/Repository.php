@@ -9,6 +9,7 @@ use Zend\EventManager\EventManager;
 use Zend\Db\Adapter\Adapter as DbAdapter;
 use Zend\Db\Sql as ZfSql;
 use Zend\Db\Sql\Predicate\PredicateInterface;
+use Zend\ServiceManager\ServiceManagerAwareInterface;
 // use Zend\Cache\StorageFactory as CacheFactory;
 
 use BrsZfSloth\Sloth;
@@ -376,7 +377,7 @@ class Repository implements RepositoryInterface
             // debuge($cacheId);
             if ($this->cache->getstorage()->hasItem($cacheId)) {
                 // debuge($this->cache->getstorage()->getItem($cacheId), $cacheId);
-                return $this->cache->getstorage()->getItem($cacheId);
+                return unserialize($this->cache->getstorage()->getItem($cacheId));
             }
             $exceptionQuery = sprintf(' [%s]', $data->getExceptionQuery());
             $data = $data();
@@ -410,8 +411,7 @@ class Repository implements RepositoryInterface
             }
         }
         if ($cacheId) {
-            // mprd($this->cache->getstorage()->getCaching());
-            $this->cache->getstorage()->setItem($cacheId, $data);
+            $this->cache->getStorage()->setItem($cacheId, serialize($data));
         }
         return $data;
     }
@@ -499,7 +499,7 @@ class Repository implements RepositoryInterface
 
     public function fetchSimilar($entity)
     {
-        $this->assertEntityClass($entity);
+        $this->definition->assertEntityClass($entity);
         $conditions = $entity->toArray();
         unset($conditions[$this->definition->getPrimary()->name]);
         return $this->fetch($conditions);
@@ -507,13 +507,17 @@ class Repository implements RepositoryInterface
 
     public function exists($entity)
     {
-        $this->assertEntityClass($entity);
-        return null !== $this->definition->getPrimary()->getValue($entity);
+        $this->definition->assertEntityClass($entity);
+        return null !== EntityTools::getValue(
+            $this->definition->getPrimary(),
+            $entity,
+            $this->definition
+        );
     }
 
     public function save($entity)
     {
-        $this->assertEntityClass($entity);
+        $this->definition->assertEntityClass($entity);
         //$this->eventManager->dispatchEvent(Events::preSave, $eventArgs);
 
         try {
@@ -657,6 +661,16 @@ class Repository implements RepositoryInterface
         }
         if ($object instanceof DefinitionAwareInterface) {
             $object->setDefinition($this->getDefinition());
+        }
+
+
+        if ($object instanceof ServiceManagerAwareInterface) {
+            try {
+                $object->setServiceManager($this->getOptions()->getServiceManager());
+
+            } catch (Exception\RuntimeException $e) {
+                // service manager maybe not set, that's no error
+            }
         }
         return $object;
     }

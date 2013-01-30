@@ -1,5 +1,10 @@
 <?php
+
 namespace BrsZfSloth;
+
+use Zend\ServiceManager\ServiceManager;
+use BrsZfSloth\Module\ModuleInterface;
+use BrsZfSloth\Definition\Definition;
 
 class Sloth
 {
@@ -31,4 +36,24 @@ class Sloth
         }
         return self::$options;
     }
+
+    // public static function registerModule(ModuleInterface $module, ServiceManager $serviceManager)
+    // {
+    //     self::getOptions()->addModule($module);
+
+    //     foreach ($module->getDbTables() as $tableWithSchema) {
+    //         list($tableName, $schema) = explode('.', $tableWithSchema);
+
+    //         if ($schema === Definition::DEFAULT_SCHEMA) {
+    //             $factoryName = $tableName . '.repository';
+    //         } else {
+    //             $factoryName = $tableWithSchema . '.repository';
+    //         }
+
+    //         $serviceManager->setFactory('tes.t', function($sm) use ($factoryName) {
+    //             dbg($factoryName);
+    //             return new \stdclass;
+    //         });
+    //     }
+    // }
 }
