@@ -67,6 +67,10 @@ interface RepositoryInterface extends DefinitionAwareInterface
 
     public function fetch($where = null, $val = Expr::UNDEFINED);
 
+
+    public function factoryEntity(array $data = array());
+    public function factoryCollection(array $rows = array());
+
     // public function get($where);
     // public function getBy($field, $value);
     // public function getMethod($field, $value);

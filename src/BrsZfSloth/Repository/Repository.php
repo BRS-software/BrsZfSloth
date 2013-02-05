@@ -3,6 +3,7 @@ namespace BrsZfSloth\Repository;
 
 use PDO;
 use Closure;
+use PDOException;
 
 use Zend\Db\Exception\ExceptionInterface as DbException;
 use Zend\EventManager\EventManager;
@@ -161,8 +162,16 @@ class Repository implements RepositoryInterface
 
         try {
             $affected = $statment->execute()->getAffectedRows();
+
         } catch (DbException $e) {
             $this->eventManager->trigger('fail.insert', $event->setParam('exception', $e));
+
+            // catch unique violation exceptions
+            $previous = $e->getPrevious();
+            if ($previous instanceof PDOException && $previous->getCode() == 23505) {
+                throw new Exception\DuplicateKeyException($previous->getMessage(), $previous->getCode(), $previous);
+            }
+
             throw new Exception\StatementException($insert->getSqlString(), 0, $e);
         }
 
@@ -240,6 +249,13 @@ class Repository implements RepositoryInterface
             $affected = $statment->execute()->getAffectedRows();
         } catch (DbException $e) {
             $this->eventManager->trigger('fail.update', $event->setParam('exception', $e));
+
+            // catch unique violation exceptions
+            $previous = $e->getPrevious();
+            if ($previous instanceof PDOException && $previous->getCode() == 23505) {
+                throw new Exception\DuplicateKeyException($previous->getMessage(), $previous->getCode(), $previous);
+            }
+
             throw new Exception\StatementException($update->getSqlString(), 0, $e);
         }
 
@@ -461,7 +477,15 @@ class Repository implements RepositoryInterface
         return $data;
     }
 
+    /**
+     * @deprecated use factoryEntity()
+     */
     public function createEntity(array $data = array())
+    {
+        return $this->factoryEntity($data);
+    }
+
+    public function factoryEntity(array $data = array())
     {
         $entityClass = $this->getDefinition()->getOptions()->getEntityClass();
         $entity = new $entityClass;
@@ -480,7 +504,15 @@ class Repository implements RepositoryInterface
         return $entity;
     }
 
+    /**
+     * @deprecated use factoryCollection()
+     */
     public function createCollection(array $rows = array())
+    {
+        return $this->factoryCollection($rows);
+    }
+
+    public function factoryCollection(array $rows = array())
     {
         $collectionClass = $this->definition->getOptions()->getCollectionClass();
         $collection = new $collectionClass;
@@ -518,23 +550,13 @@ class Repository implements RepositoryInterface
     public function save($entity)
     {
         $this->definition->assertEntityClass($entity);
+
         //$this->eventManager->dispatchEvent(Events::preSave, $eventArgs);
 
-        try {
-            if ($this->exists($entity)) {
-                $this->update($entity);
-            } else {
-                throw new Exception\DuplicateKeyException('sprawdzić koniecznie duplicate key');
-                $this->insert($entity);
-            }
-
-        } catch (\Zend_Db_Statement_Exception $e) {
-            switch ($e->getCode()) {
-                case 23505:
-                    throw new Exception\DuplicateKeyException($e->getMessage(), $e->getCode(), $e);
-                default:
-                    throw $e;
-            }
+        if ($this->exists($entity)) {
+            $this->update($entity);
+        } else {
+            $this->insert($entity);
         }
 
         //$this->eventManager->dispatchEvent(Events::postSave, $eventArgs);
