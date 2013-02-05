@@ -34,17 +34,24 @@ trait EntityTrait
             );
         }
 
+        $fieldName = $field->getName();
+
         switch(substr($method, 0, 3)) {
             case 'set':
-                $this->__values[$field->getName()] = $args[0];
+                if (property_exists($this, $fieldName)) {
+                    $this->$fieldName = $args[0];
+                    $this->__values[$fieldName] = &$this->$fieldName;
+                } else {
+                    $this->__values[$fieldName] = $args[0];
+                }
                 // $this->__isChanged = true;
                 return $this;
 
             case 'get':
-                if (! array_key_exists($field->getName(), $this->__values)) {
+                if (! array_key_exists($fieldName, $this->__values)) {
                     return $field->getDefault();
                 }
-                return $this->__values[$field->getName()];
+                return $this->__values[$fieldName];
         }
     }
 
