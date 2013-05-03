@@ -5,6 +5,16 @@ use BrsZfSloth\Exception\AssertException;
 
 class Assert
 {
+    public static function objectClass($value, $class)
+    {
+        if (! $value instanceof $class) {
+            throw new AssertException(
+                sprintf('value %s is not instance of %s', self::valueToString($value), $class)
+            );
+        }
+        return $value;
+    }
+
     public static function characterVarying($value, $max)
     {
         return self::string($value, 0, $max);
