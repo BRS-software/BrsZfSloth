@@ -162,6 +162,20 @@ class Assert
         return $value;
     }
 
+    public static function has($value, $keys, $message = 'element does not have key "%s"')
+    {
+        $test = (array) $value;
+        foreach ((array) $keys as $k) {
+            if (! array_key_exists($k, $test)) {
+                throw new AssertException(
+                    // sprintf($message, self::valueToString($value), $k)
+                    sprintf($message, $k)
+                );
+            }
+        }
+        return $value;
+    }
+
     public static function valueToString($value)
     {
         $type = gettype($value);
