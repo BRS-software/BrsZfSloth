@@ -15,7 +15,7 @@ class Json implements StrategyInterface
      */
     public function extract($value)
     {
-        if (! $value instanceof StdClass) { // do not change not object values, that task for filter
+        if (! is_array($value)) { // do not change not object values, that task for filter
             return $value;
         }
         return json_encode($value);
@@ -29,6 +29,6 @@ class Json implements StrategyInterface
      */
     public function hydrate($value)
     {
-        return json_decode($value);
+        return json_decode($value, true);
     }
 }
