@@ -15,7 +15,9 @@ class MysqlIntegrationTest extends AbstractIntegrationTest
         if (!extension_loaded('mysql')) {
             $this->fail('The phpunit group integration-mysql was enabled, but the extension is not loaded.');
         }
-
+        // CREATE DATABASE unittest;
+        // CREATE USER 'unittest'@'localhost' IDENTIFIED BY 'unittest';
+        // GRANT ALL PRIVILEGES ON unittest.* TO 'unittest'@'localhost' WITH GRANT OPTION;
         $this->adapter = new Adapter([
             'driver'         => 'Pdo',
             'dsn'            => sprintf('mysql:dbname=%s;host=%s', $GLOBALS['SLOTH_INTEGRATION_DBNAME'], $GLOBALS['SLOTH_INTEGRATION_HOSTNAME']),
@@ -52,7 +54,7 @@ class MysqlIntegrationTest extends AbstractIntegrationTest
 
     protected function dropTestTable()
     {
-        if (false !== $this->adapter->query('show tables like "'.$this->testTableName.'"')->execute()->current()) {
+        if ($this->adapter && false !== $this->adapter->query('show tables like "'.$this->testTableName.'"')->execute()->current()) {
             $this->adapter->query("drop table ".$this->testTableName)->execute();
         }
     }

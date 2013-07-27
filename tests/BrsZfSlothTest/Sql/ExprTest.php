@@ -162,6 +162,12 @@ class ExprTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("assignedValue::text", (string) $e->setParam('some', 'assignedValue')->render());
     }
 
+    // public function testDoubleUseTheSameParam()
+    // {
+    //     $e = new Expr('`:some`1 `:some`2');
+    //     $this->assertEquals("assignedValue::text", (string) $e->setParam('some', 'xxx')->render());
+    // }
+
     /**
      * @expectedException BrsZfSloth\Exception\NotExistsException
      * @expectedExceptionMessage Param "text" not exists in expression "::text"

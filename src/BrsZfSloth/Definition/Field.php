@@ -59,8 +59,9 @@ class Field extends AbstractOptions
             'hydratorStrategyClass' => 'BrsZfSloth\Hydrator\Strategy\Arra',
         ],
         self::TYPE_JSON => [
-            'assert' => 'objectClass',
-            'assertParams' => ['stdclass'],
+            'assert' => 'arra',
+            // 'assert' => 'objectClass',
+            // 'assertParams' => ['stdclass'],
             'hydratorStrategyClass' => 'BrsZfSloth\Hydrator\Strategy\Json',
         ],
     ];

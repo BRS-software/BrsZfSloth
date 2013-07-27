@@ -28,6 +28,7 @@
     </groups>
 
     <php>
+        <ini name="xdebug.cli_color" value="1" />
         <!-- Integration Test Variables -->
         <var name="SLOTH_INTEGRATION_HOSTNAME" value="localhost" />
         <var name="SLOTH_INTEGRATION_USERNAME" value="unittest" />

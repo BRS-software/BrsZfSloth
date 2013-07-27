@@ -51,7 +51,7 @@ class PgsqlIntegrationTest extends AbstractIntegrationTest
 
     protected function dropTestTable()
     {
-        if (false !== $this->adapter->query("select * from pg_tables where schemaname='public' and tablename='".$this->testTableName."'")->execute()->current()) {
+        if ($this->adapter && false !== $this->adapter->query("select * from pg_tables where schemaname='public' and tablename='".$this->testTableName."'")->execute()->current()) {
             $this->adapter->query("drop table ".$this->testTableName)->execute();
         }
     }
