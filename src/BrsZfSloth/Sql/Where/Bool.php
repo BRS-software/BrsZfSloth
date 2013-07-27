@@ -2,15 +2,37 @@
 
 namespace BrsZfSloth\Sql\Where;
 
-class Bool extends SingleField {
+use BrsZfSloth\Exception;
 
-    protected function getExpr($field) {
-        return sprintf('{%s}=:%s', $field, $field);
+class Bool extends SingleField
+{
+    public function setParam($name, $value = self::UNDEFINED)
+    {
+        $this->parseCache = null;
+
+        if (! is_bool($value)) {
+            throw new Exception\InvalidArgumentException('value must be boolean type');
+        }
+
+        if ($value) {
+            $this->positiveExpr = $this->expr = sprintf('{%s}', $name);
+            $this->negativeExpr = sprintf('NOT {%s}', $name);
+        } else {
+            $this->positiveExpr = $this->expr = sprintf('NOT {%s}', $name);
+            $this->negativeExpr = sprintf('{%s}', $name);
+        }
+        // parent::setParam($name, $value);
     }
-    protected function getNegativeExpr($field) {
-        return 'NOT '.$this->getExpr($field);
+
+    protected function getExpr($field)
+    {
+        // return sprintf('{%s}=:%s', $field, $field);
+        return '1=0';
     }
-    protected function getValue() {
-        return parent::getValue() ? 'true' : 'false';
+
+    protected function getNegativeExpr($field)
+    {
+        // return 'NOT '.$this->getExpr($field);
+        return '1=0';
     }
 }

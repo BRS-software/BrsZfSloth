@@ -216,7 +216,7 @@ class Expr implements PredicateInterface
     public function getExpressionData()
     {
         $parsed = $this->parse();
-
+// dbgd($parsed);
         $exprData = array(
             'e' => str_replace('%', '%%', $this->expr),  // expr will be used in vsprintf()
             'p' => array(), // params
@@ -236,8 +236,12 @@ class Expr implements PredicateInterface
 
             // matched is param
             } else {
-                $value = $this->getParam($p);
-                // debuge(sprintf('test %d', $value));
+
+                if ($this instanceof Where\SingleField) {
+                    $value = $this->getValue();
+                } else {
+                    $value = $this->getParam($p);
+                }
 
                 // XXX na razie dla intów też jako %s bo robi się np '2' i to w sprintf zamienia się w 0
                 // może trzeba by zmieniać typ na LITERAL wtedy?
@@ -248,6 +252,7 @@ class Expr implements PredicateInterface
                 $exprData['t'][] = ExpressionInterface::TYPE_VALUE;
             }
         }
+        // dbg($exprData);
         return array(
             // array(
             //     '%s = %2$f',
