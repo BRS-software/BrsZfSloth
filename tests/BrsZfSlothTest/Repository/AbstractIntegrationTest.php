@@ -115,7 +115,8 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
         if (null === $data) {
             $this->insertTestData([
                 'short_name' => 'tester1',
-                'comment' => 'standard data row 1'
+                'comment' => 'standard data row 1',
+                'is_active' => true,
             ]);
             $this->insertTestData([
                 'short_name' => 'tester2',
@@ -311,14 +312,41 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
             'definition' => $this->getTestDefinition(),
         ]);
 
+        // equals
         $this->assertEquals(1, $repo->fetch('nick', 'tester1')[0]->id);
         $this->assertEquals(1, $repo->fetch("{nick}='tester1'")[0]->id);
         $this->assertEquals(1, $repo->fetch(['nick' => 'tester1'])[0]->id);
-        $this->assertEquals(1, $repo->fetch(['nick' => 'tester1', 'isActive' => true])[0]->id);
         $this->assertEquals(1, $repo->fetch(new Where("{nick}='tester1'"))[0]->id);
         $this->assertEquals(1, $repo->fetch(function(\Zend\Db\Sql\Select $select) {
             $select->where(new Where("{nick}='tester1'"));
         })[0]->id);
+
+        // equals boolean
+        $this->assertEquals(1, $repo->fetch(['nick' => 'tester1', 'isActive' => true])[0]->id);
+        $this->assertEquals(0, count($repo->fetch(['nick' => 'tester1', 'isActive' => false])));
+
+        // equals true
+        $this->assertEquals(1, count($repo->fetch(['isActive' => true])));
+        $this->assertEquals(1, count($repo->fetch(new Where\Bool('isActive', true))));
+        $this->assertEquals(1, count($repo->fetch(new Where\Tru('isActive'))));
+
+        // equals false
+        $this->assertEquals(2, count($repo->fetch(['isActive' => false])));
+        $this->assertEquals(2, count($repo->fetch(new Where\Bool('isActive', false))));
+        $this->assertEquals(2, count($repo->fetch(new Where\Fals('isActive'))));
+
+        // or
+        $orWhere = new Where("{nick}=:nick OR {nick}='tester2'");
+        $orWhere->setParam('nick', 'tester1');
+        $this->assertEquals(2, count($repo->fetch($orWhere)));
+
+        $this->assertEquals(2, count($repo->fetch(new Where("{nick}='tester1' OR {nick}='tester2'"))));
+
+        $this->assertEquals(2, count($repo->fetch(function ($select) {
+            $where = new Where("{nick}='tester1'");
+            $where->orRule(new Where("{nick}='tester2'"));
+            $select->where($where);
+        })));
 
         // fetch all
         $this->assertEquals(3, $repo->fetch()->count());
@@ -330,9 +358,7 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(2, $repo->fetch(function(\Zend\Db\Sql\Select $select) {
             $select->limit(2);
         })->count());
-
     }
-
 
     /**
      * @dataProvider entityProvider

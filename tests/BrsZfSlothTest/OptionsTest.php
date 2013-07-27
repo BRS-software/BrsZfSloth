@@ -22,7 +22,7 @@ class OptionsTest extends \PHPUnit_Framework_TestCase
         $opt = new Options;
 
 
-        $this->assertEquals(12, count($opt->toArray())); // new options must be added to changeAll()
+        $this->assertEquals(14, count($opt->toArray())); // new options must be added to changeAll()
 
 
         // mprd(count($opt->toArray()));
