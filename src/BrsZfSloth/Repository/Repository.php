@@ -125,7 +125,25 @@ class Repository implements RepositoryInterface
 
     public function getDsn()
     {
-        return $this->adapter->getDriver()->getConnection()->getConnectionParameters()['dsn'];
+        return $this->getAdapter()->getDriver()->getConnection()->getConnectionParameters()['dsn'];
+    }
+
+    public function beginTransaction()
+    {
+        $this->getAdapter()->getDriver()->getConnection()->beginTransaction();
+        return $this;
+    }
+
+    public function rollback()
+    {
+        $this->getAdapter()->getDriver()->getConnection()->rollback();
+        return $this;
+    }
+
+    public function commit()
+    {
+        $this->getAdapter()->getDriver()->getConnection()->commit();
+        return $this;
     }
 
     public function getEventManager()
@@ -623,7 +641,7 @@ class Repository implements RepositoryInterface
     {
         $statment = $this->adapter->createStatement();
         $select = $this->getSelect($selectFn);
-        $select->prepareStatement($this->adapter, $statment);
+        $select->prepareStatement($this->getAdapter(), $statment);
 
         return new CacheableResult($this, $select, function($event) use ($statment, $select) {
             try {
@@ -636,13 +654,24 @@ class Repository implements RepositoryInterface
                 // mprd($select->getSqlString());
                 //$this->rollbackTransaction();
                 $this->getEventManager()->trigger('fail.select', $event->setParam('exception', $e));
-                throw new Exception\StatementException($select->getSqlString(), 0, $e);
+                throw new Exception\StatementException($select->getSqlString($this->getAdapter()->getPlatform()), 0, $e);
             }
         });
     }
 
     protected function getWhereFn($where, $val = Expr::UNDEFINED)
     {
+        $equal2Where = function ($fieldName, $val) {
+            if ($val instanceof Where) {
+                return $val;
+            } elseif (is_bool($val)) {
+                return new Where\Bool($fieldName, $val);
+            } elseif (null === $val) {
+                return new Where\Nul($fieldName);
+            } else {
+                return new Where\Equal($fieldName, $val);
+            }
+        };
         switch (true) {
             case $where instanceof Closure:
                 return $where;
@@ -652,13 +681,13 @@ class Repository implements RepositoryInterface
                 $where = (new Where($where));
                 break;
             case is_string($where):
-                $where = new Where\Equal($where, $val);
+                $where = $equal2Where($where, $val);
                 break;
             case is_array($where) && $where:
-                $_where = new Where\Equal(key($where), current($where));
+                $_where = $equal2Where(key($where), current($where));
                 array_shift($where);
                 while(!empty($where)) {
-                    $_where->andRule(new Where\Equal(key($where), current($where)));
+                    $_where->andRule($equal2Where(key($where), current($where)));
                     array_shift($where);
                 }
                 $where = $_where;
@@ -668,11 +697,10 @@ class Repository implements RepositoryInterface
                     ExceptionTools::msg('argument where must be Rule\Where|Closure|array|string, given %s', $where)
                 );
         }
+        // dbgd($where);
         return function(Sql\Select $select) use ($where) {
             $where->setDefaultDefinition($this);
-            // debuge((string)$where->render());
             $select->where(array($where));
-            // debuge($select->getSqlString());
         };
     }
 
