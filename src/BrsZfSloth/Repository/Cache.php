@@ -66,7 +66,7 @@ class Cache
     public function clearStorage()
     {
         if ($this->storage instanceof CacheClearByNamespace) {
-            $this->storage->clearByNamespace($this->namespace);
+            @$this->storage->clearByNamespace($this->namespace);
         } elseif ($this->storage instanceof CacheFlushable) {
             $this->storage->flush();
         } else {

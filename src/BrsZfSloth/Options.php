@@ -37,8 +37,9 @@ class Options extends AbstractOptions
         //     ],
         // ]
         'adapter' => [
-            'name' => 'apc',
+            'name' => 'memcached',
             'options' => [
+                'servers' => 'localhost',
                 // 'namespace' => 'sloth',
                 // 'namespaceSeparator' => '|'
             ],
@@ -50,9 +51,10 @@ class Options extends AbstractOptions
     protected $definitionCache;
     protected $definitionCacheConfig = [
         'adapter' => [
-            'name' => 'apc',
+            'name' => 'memcached',
             'options' => [
-                'namespace' => 'BrsZfSloth|DefinitionCache',
+                'servers' => 'localhost',
+                'namespace' => 'BrsZfSloth:DefinitionCache',
                 // 'namespace' => 'sloth',
                 // 'namespaceSeparator' => '|'
             ],
