@@ -38,6 +38,7 @@ class Assert
                 sprintf($errorMessage, $value, $min, $max)
             );
         }
+        return $value;
     }
 
     public static function int($value, $errorMessage = 'value %s is not a integer')
