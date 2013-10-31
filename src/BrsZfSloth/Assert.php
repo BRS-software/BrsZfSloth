@@ -177,6 +177,23 @@ class Assert
         return $value;
     }
 
+    public static function notEmpty($value, $message = 'Value %s is empty')
+    {
+        if (empty($value)) {
+            throw new AssertException(sprintf($message, self::valueToString($value)));
+        }
+        return $value;
+    }
+
+
+    public static function tru($value, $message = 'Expression is not true')
+    {
+        if (true !== $value) {
+            throw new AssertException(sprintf($message, self::valueToString($value)));
+        }
+        return $value;
+    }
+
     public static function valueToString($value)
     {
         $type = gettype($value);
