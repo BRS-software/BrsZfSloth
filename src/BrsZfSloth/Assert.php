@@ -194,6 +194,14 @@ class Assert
         return $value;
     }
 
+    public static function fileExists($value, $message = 'File $s not exists')
+    {
+        if (! file_exists($value)) {
+            throw new AssertException(sprintf($message, self::valueToString($value)));
+        }
+        return $value;
+    }
+
     public static function valueToString($value)
     {
         $type = gettype($value);
