@@ -55,6 +55,26 @@ trait EntityTrait
         }
     }
 
+    /**
+     * @param string $fieldName
+     * @param mixed $defaultValue will be returned when field value is null and default value is null
+     */
+    public function get($fieldName, $defaultValue = null)
+    {
+        $getter = 'get' . ucfirst($fieldName);
+        $val = $this->$getter();
+        if (null === $val) {
+            $val = $defaultValue;
+        }
+        return $val;
+    }
+
+    public function set($fieldName, $value)
+    {
+        $setter = 'set' . ucfirst($fieldName);
+        return $this->$setter($value);
+    }
+
     // public function setServiceManager(ServiceManager $serviceManager)
     // {
     //     $this->__serviceManager = $serviceManager;
