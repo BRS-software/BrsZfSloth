@@ -70,8 +70,11 @@ class Select extends ZfSelect implements DefinitionAwareInterface
     public function configureFromDefinition()
     {
         $definition = $this->getDefinition();
+        // $this->from($definition->getTableIdentifier());
         $this->from($definition->getTable());
         $this->columns($definition->getMapping());
+        // dbgd($definition->getDefaultOrder());
+        $this->order($definition->getDefaultOrder());
         return $this;
     }
  }
