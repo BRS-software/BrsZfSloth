@@ -155,6 +155,14 @@ class Assert
         return $value;
     }
 
+    public static function inArrayAsKey($value, array $array, $message = 'Value %s dosen\'t exists in %s as key')
+    {
+        if (! array_key_exists($value, $array, true)) {
+            throw new AssertException(sprintf($message, self::valueToString($value), var_export(array_values($array), true)));
+        }
+        return $value;
+    }
+
     public static function arra($value, $message = 'Value %s is not a array')
     {
         if (! is_array($value)) {
@@ -194,7 +202,7 @@ class Assert
         return $value;
     }
 
-    public static function fileExists($value, $message = 'File $s not exists')
+    public static function fileExists($value, $message = 'File %s not exists')
     {
         if (! file_exists($value)) {
             throw new AssertException(sprintf($message, self::valueToString($value)));
