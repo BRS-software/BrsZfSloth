@@ -29,6 +29,9 @@ class Json implements StrategyInterface
      */
     public function hydrate($value)
     {
+        if (is_array($value)) {
+            return $value; // XXX test why in this place not always is string?
+        }
         return json_decode($value, true);
     }
 }
