@@ -157,7 +157,7 @@ class Assert
 
     public static function inArrayAsKey($value, array $array, $message = 'Value %s dosen\'t exists in %s as key')
     {
-        if (! array_key_exists($value, $array, true)) {
+        if (! array_key_exists($value, $array)) {
             throw new AssertException(sprintf($message, self::valueToString($value), var_export(array_values($array), true)));
         }
         return $value;
