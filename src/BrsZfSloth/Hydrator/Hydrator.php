@@ -99,21 +99,33 @@ class Hydrator extends AbstractHydrator implements DefinitionAwareInterface
         if ($this->underscoreSeparatedKeys) {
             foreach ($data as $property => $value) {
                 $property = DefinitionTools::transformUnderscoreToCamelCase($property);
-                $method = 'set' . ucfirst($property);
-                $object->$method(
-                    $this->hydrateValue($property, $value)
-                );
+                // $method = 'set' . ucfirst($property);
+                // $object->$method(
+                //     $this->hydrateValue($property, $value)
+                // );
+                $this->_hydrate($object, $property, $value);
 
             }
         } else {
             foreach ($data as $property => $value) {
-                $method = 'set' . ucfirst($property);
-                $object->$method(
-                    $this->hydrateValue($property, $value)
-                );
+                $this->_hydrate($object, $property, $value);
+                // $method = 'set' . ucfirst($property);
+                // $object->$method(
+                //     $this->hydrateValue($property, $value)
+                // );
             }
         }
         return $this;
+    }
+
+    public function _hydrate($object, $property, $value)
+    {
+        $method = 'set' . ucfirst($property);
+        $object->$method(
+            null !== $value // do not hydrate null values
+            ? $this->hydrateValue($property, $value)
+            : null
+        );
     }
 
     protected function assertEntity($object)

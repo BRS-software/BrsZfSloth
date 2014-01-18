@@ -29,11 +29,11 @@ class PgsqlIntegrationTest extends AbstractIntegrationTest
         // mprd($this->adapter);
     }
 
-    protected function setupTestTable()
+    protected function setupTestTable($schema_tableName = null)
     {
         $this->dropTestTable();
         $statement = $this->adapter->query('
-            CREATE TABLE '.$this->testTableName.' (
+            CREATE TABLE '.$this->testTableSchema.'.'.$this->testTableName.' (
                 id_user serial NOT NULL,
                 crt_date timestamp without time zone NOT NULL DEFAULT now(),
                 short_name character varying(16) NOT NULL,
@@ -51,8 +51,12 @@ class PgsqlIntegrationTest extends AbstractIntegrationTest
 
     protected function dropTestTable()
     {
-        if ($this->adapter && false !== $this->adapter->query("select * from pg_tables where schemaname='public' and tablename='".$this->testTableName."'")->execute()->current()) {
-            $this->adapter->query("drop table ".$this->testTableName)->execute();
+        if ($this->adapter && false !== $this->adapter->query(
+            sprintf("select * from pg_tables where schemaname='%s' and tablename='%s'", $this->testTableSchema, $this->testTableName)
+        )->execute()->current()) {
+            $this->adapter->query(sprintf("drop table %s.%s", $this->testTableSchema, $this->testTableName))->execute();
         }
+
+        // SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'name'
     }
 }
