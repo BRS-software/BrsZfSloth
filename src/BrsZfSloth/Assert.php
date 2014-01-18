@@ -210,6 +210,22 @@ class Assert
         return $value;
     }
 
+    public static function scalar($value, $message = 'Value %s is not scalar')
+    {
+        if (! is_scalar($value)) {
+            throw new AssertException(sprintf($message, self::valueToString($value)));
+        }
+        return $value;
+    }
+
+    public static function equals($value, $valueToCompare, $message = 'Value %s is not equal to %s')
+    {
+        if ($value !== $valueToCompare) {
+            throw new AssertException(sprintf($message, self::valueToString($value), self::valueToString($valueToCompare)));
+        }
+        return $value;
+    }
+
     public static function valueToString($value)
     {
         $type = gettype($value);
