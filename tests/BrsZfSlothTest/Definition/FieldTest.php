@@ -92,4 +92,35 @@ class FieldTest extends \PHPUnit_Framework_TestCase
         $field = new Field('test', $type);
         $field->assertValue($invalidValue);
     }
+
+    /**
+     * @dataProvider assertValueProvider
+     * @expectedException BrsZfSloth\Exception\AssertException
+     */
+    public function testAssertValueWhenConstantValueIsSetFail($type, $validValue, $invalidValue)
+    {
+        $field = new Field('test', $type);
+        $field->setConstantValue('someConstVal');
+        $field->assertValue($validValue);
+    }
+
+    /**
+     * @dataProvider assertValueProvider
+     */
+    public function testAssertValueWhenConstantValueIsSet($type, $validValue, $invalidValue)
+    {
+        $field = new Field('test', $type);
+        $field->setConstantValue($validValue);
+        $field->assertValue($validValue);
+    }
+
+    public function testGetDefaultValueWhenConstantValueIsSet()
+    {
+        $field = new Field('test', 'integer');
+        $field->setDefault(1);
+        $this->assertEquals(1, $field->getDefault());
+        $field->setConstantValue(2);
+        $this->assertEquals(2, $field->getDefault());
+    }
+
 }

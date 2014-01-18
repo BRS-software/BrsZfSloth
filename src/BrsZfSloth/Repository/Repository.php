@@ -599,6 +599,12 @@ class Repository implements RepositoryInterface
         if ($selectFn) {
             $selectFn($select);
         }
+        if ($def->hasConstantValuesFields()) {
+            foreach ($def->getConstantValuesFields() as $f) {
+                $select->where(new Sql\Where\Equal($f->getName(), $f->getConstantValue()));
+            }
+        }
+
         return $select;
     }
 

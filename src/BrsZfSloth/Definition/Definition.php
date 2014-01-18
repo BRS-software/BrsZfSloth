@@ -13,6 +13,7 @@ use Zend\Stdlib\AbstractOptions;
 use Zend\Stdlib\Hydrator\HydratorInterface;
 use Zend\Cache\Storage\FlushableInterface as CacheFlushable;
 use Zend\Cache\Storage\ClearByNamespaceInterface as CacheClearByNamespace;
+use Zend\Db\Sql\TableIdentifier;
 
 use BrsZfSloth\Exception;
 use BrsZfSloth\Exception\ExceptionTools;
@@ -41,6 +42,7 @@ class Definition implements
     protected $originFile;
     protected $fields = array();
     protected $mapping = array();
+    protected $constantValuesFields;
 
 
     public static function reset()
@@ -129,10 +131,9 @@ class Definition implements
                 ExceptionTools::msg('path must be string, given %s', $path)
             );
         }
-
         foreach ($paths as $path) {
             foreach (new DirectoryIterator($path) as $fileinfo) {
-                $basename = explode('.', $fileinfo->getFilename())[0];
+                $basename = $fileinfo->getBaseName('.' . $fileinfo->getExtension());
                 if ($fileinfo->isFile() && $basename === $name) {
                     switch (strtolower($fileinfo->getExtension())) {
                         case 'json':
@@ -286,6 +287,11 @@ class Definition implements
     public function getTable()
     {
         return $this->table;
+    }
+
+    public function getTableIdentifier()
+    {
+        return new TableIdentifier($this->getTable(), $this->getSchema());
     }
 
     public function setHydrator(HydratorInterface $hydrator)
@@ -545,6 +551,24 @@ class Definition implements
     public function getMapping()
     {
         return $this->mapping;
+    }
+
+    public function getConstantValuesFields()
+    {
+        if ($this->constantValuesFields === null) {
+            $this->constantValuesFields = [];
+            foreach ($this as $f) {
+                if ($f->hasConstantValue()) {
+                    $this->constantValuesFields[] = $f;
+                }
+            }
+        }
+        return $this->constantValuesFields;
+    }
+
+    public function hasConstantValuesFields()
+    {
+        return ! empty($this->getConstantValuesFields());
     }
 
     public function count()

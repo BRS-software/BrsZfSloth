@@ -184,6 +184,35 @@ class EntityToolsTest extends \PHPUnit_Framework_TestCase
     /**
      * @dataProvider toEntityProvider
      */
+    public function testGetDefaultValue($def, $hydratorClass, $entity)
+    {
+        $def->getOptions()->setEntityClass(get_class($entity));
+        $def->setHydrator(new $hydratorClass);
+
+        $def->getField('comment')->setDefault('defaultValue');
+        $this->assertEquals('defaultValue', EntityTools::getValue('comment', $entity, $def));
+
+        EntityTools::setValue('comment', 'xxx', $entity, $def);
+        $this->assertEquals('xxx', EntityTools::getValue('comment', $entity, $def));
+    }
+
+    /**
+     * @dataProvider toEntityProvider
+     * @expectedException BrsZfSloth\Exception\AssertException
+     */
+    public function testSetConstantValue($def, $hydratorClass, $entity)
+    {
+        $def->getOptions()->setEntityClass(get_class($entity));
+        $def->setHydrator(new $hydratorClass);
+
+        $def->getField('firstName')->setConstantValue('constValue');
+        EntityTools::setValue('firstName', 'xxx', $entity, $def);
+        EntityTools::assertFieldValue('firstName', $entity, $def);
+    }
+
+    /**
+     * @dataProvider toEntityProvider
+     */
     public function testAssertFieldValue($def, $hydratorClass, $entity)
     {
         $def->getOptions()->setEntityClass(get_class($entity));

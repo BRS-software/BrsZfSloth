@@ -15,10 +15,8 @@ trait EntityTrait
 
     protected $__values = array();
     protected $__originValues = array();
-    // protected $__isChanged = false;
     protected $__repository;
     protected $__definition;
-    // protected $__serviceManager;
 
     public function __call($method, $args)
     {

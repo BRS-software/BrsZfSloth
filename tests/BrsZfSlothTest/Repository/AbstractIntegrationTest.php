@@ -29,6 +29,7 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
     );
 
     protected $adapter;
+    protected $testTableSchema = 'public';
     protected $testTableName = 'testtable';
 
     abstract protected function setupTestTable();
@@ -58,6 +59,7 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
     {
         return new Definition([
             'name' => 'users',
+            'schema' => 'public',
             'table' => $this->testTableName,
             'entityClass' => 'StdClass',
             'hydratorClass' => 'Zend\Stdlib\Hydrator\ObjectProperty',
@@ -156,7 +158,8 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(1, $repo->get('nick', 'tester1')->id);
         $this->assertEquals(1, $repo->get("{nick}='tester1'")->id);
         $this->assertEquals(1, $repo->get(['nick' => 'tester1'])->id);
-        $this->assertEquals(1, $repo->get(['nick' => 'tester1', 'isActive' => false])->id);
+        $this->assertEquals(1, $repo->get(['nick' => 'tester1', 'isActive' => true])->id);
+        $this->assertEquals(2, $repo->get(['nick' => 'tester2', 'isActive' => false])->id);
         $this->assertEquals(1, $repo->get(new Where("{nick}='tester1'"))->id);
         $this->assertEquals(1, $repo->get(function(\Zend\Db\Sql\Select $select) {
             // $select->where("short_name='tester1'");
@@ -241,6 +244,23 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
         $repo->get('nick', 'tester2'); // must get data from db, not from cache
 
         $this->assertEquals(3, $queryCounter);
+    }
+
+    public function testGetWithConstantValue()
+    {
+        $this->setupTestTable();
+        $this->insertTestData();
+        $def = $this->getTestDefinition();
+
+        $def['nick']->setConstantValue('tester1');
+        // dbgd($def['nick']->getConstantValue());
+
+        $repo = new Repository([
+            'dbAdapter' => $this->adapter,
+            'definition' => $def,
+        ]);
+
+        $this->assertEquals(1, $repo->fetch()->count());
     }
 
     /**

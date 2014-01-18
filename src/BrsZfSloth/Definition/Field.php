@@ -8,12 +8,14 @@ use BrsZfSloth\Exception;
 use BrsZfSloth\Exception\ExceptionTools;
 use BrsZfSloth\Assert;
 use BrsZfSloth\Entity\Entity;
+use BrsZfSloth\Sql\Expr;
 
 class Field extends AbstractOptions
 {
     // types
     const TYPE_INTEGER = 'integer';
     const TYPE_SMALLINT = 'smallint';
+    const TYPE_NUMERIC = 'numeric';
     const TYPE_TEXT = 'text';
     const TYPE_CHARACTER_VARYING = 'character varying';
     const TYPE_BOOLEAN = 'boolean';
@@ -30,6 +32,9 @@ class Field extends AbstractOptions
         ],
         self::TYPE_SMALLINT => [
             'assert' => 'smallint',
+        ],
+        self::TYPE_NUMERIC => [
+            'assert' => 'numeric',
         ],
         self::TYPE_TEXT => [
             'assert' => 'string',
@@ -76,6 +81,7 @@ class Field extends AbstractOptions
     protected $primary = false;
     protected $sequence; // db sequence name
     protected $notNull = false;
+    protected $constantValue = Expr::UNDEFINED;
     // private will not be exported in toArray() method
 
 
@@ -214,6 +220,27 @@ class Field extends AbstractOptions
         return $this->getNotNull();
     }
 
+    public function setConstantValue($constantValue)
+    {
+        $this->constantValue = $constantValue;
+        return $this;
+    }
+
+    public function getConstantValue()
+    {
+        if (! $this->hasConstantValue()) {
+            throw new Exception\NotSetException(
+                ExceptionTools::msg('constant value is not set in field %s', $this)
+            );
+        }
+        return $this->constantValue;
+    }
+
+    public function hasConstantValue()
+    {
+        return $this->constantValue !== Expr::UNDEFINED;
+    }
+
     public function setDefault($value)
     {
         $this->default = $value;
@@ -222,6 +249,9 @@ class Field extends AbstractOptions
 
     public function getDefault()
     {
+        if ($this->hasConstantValue()) {
+            return $this->getConstantValue();
+        }
         // default value must be validated
         // better to do it here, because if it has changed assertParams, the validation would be incorrect
         // return $this->assertValue($this->default);
@@ -278,6 +308,9 @@ class Field extends AbstractOptions
 
     public function assertValue($value)
     {
+        if ($this->hasConstantValue()) {
+            Assert::equals($value, $this->getConstantValue());
+        }
         $args = $this->getAssertParams();
         array_unshift($args, $value);
         forward_static_call_array(array('BrsZfSloth\Assert', $this->getAssert()), $args); // must throw InvalidArgumentExceptions when fault
