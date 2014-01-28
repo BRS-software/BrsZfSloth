@@ -85,12 +85,14 @@ class Expr implements PredicateInterface
 
     protected function getDefinitionByAlias($alias)
     {
-        if (! array_key_exists($alias, $this->definitions)) {
-            throw new Exception\RuntimeException(
-                ExceptionTools::msg('definition not exists for alias "%s" in expression %s', $alias, $this)
-            );
+        if (array_key_exists($alias, $this->definitions)) {
+            return $this->definitions[$alias];
+        } else {
+            return Definition::getCachedInstance($alias);
+            // throw new Exception\RuntimeException(
+            //     ExceptionTools::msg('definition not exists for alias "%s" in expression %s', $alias, $this)
+            // );
         }
-        return $this->definitions[$alias];
     }
 
     /**
@@ -162,8 +164,8 @@ class Expr implements PredicateInterface
 
         // if (preg_match_all('/\{([\w\.\\\\]+)\}|^|[^\:]\:(\w+)/', $this->expr, $m)) {
         // if (preg_match_all('/\{(?P<identifier>[\w\.\\\\]+)\}|\:(?P<param>\w+)/', $expr, $m)) {
-        if (preg_match_all('/\{([\w\.\\\\]+)\}|\:(\w+)/', $expr, $m)) {
-            // debuge($m);
+        if (preg_match_all('/\{([\w\.\:\\\\]+)\}|\:(\w+)/', $expr, $m)) {
+            // dbg($m);
             $result['matched'] = $m[0];
             $result['fields'] = $m[1];
             $result['params'] = $m[2];
@@ -198,17 +200,33 @@ class Expr implements PredicateInterface
     protected function getIdentifier($field)
     {
         if (strpos($field, '.')) {
-            list($alias, $fieldName) = explode('.', $field);
+            list($alias, $fieldName) = explode('.', trim($field));
+        } elseif (false !== strpos($field, ':')) {
+            list($alias, $attr) = explode(':', trim($field));
+            $attr = trim(strtolower($attr));
         } else {
-            $alias = self::DEFAULT_DEFINITION_ALIAS;
             $fieldName = $field;
         }
+
+        if (empty($alias)) {
+            $alias = self::DEFAULT_DEFINITION_ALIAS;
+        }
+
         $definition = $this->getDefinitionByAlias($alias);
         //ExceptionTools::msg('definition alias no match for identifier "%s" in expression %s', $field, $this)
-        $identifier = $definition->getField($fieldName)->getMapping();
 
-        if ($table = $definition->getTable()) {
-            return sprintf('%s.%s', $table, $identifier);
+        if (isset($fieldName)) {
+            $identifier = $definition->getField($fieldName)->getMapping();
+            if ($table = $definition->getTable()) {
+                return sprintf('%s.%s', $table, $identifier);
+            }
+        } elseif ('table' === $attr) {
+            $identifier = $definition->getTable();
+        } elseif ('defaultorder' === $attr) {
+            $identifier = $definition->getDefaultOrder();
+            // dbgd($identifier);
+        } else {
+            $identifier = '';
         }
         return $identifier;
     }

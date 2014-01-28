@@ -47,8 +47,9 @@ class Select extends ZfSelect implements DefinitionAwareInterface
         // apply default definition alias
         if ($order instanceof Expr) {
             $order->setDefaultDefinition($this);
+            $order = (string) $order->render();
         }
-        return parent::order((string) $order->render());
+        return parent::order($order);
     }
 
     public function getDefinition()

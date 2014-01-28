@@ -71,8 +71,7 @@ class ExprTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException BrsZfSloth\Exception\RuntimeException
-     * @expectedExceptionMessage definition not exists for alias "aliasname" in expression object(BrsZfSloth\Sql\Expr) {aliasname.testField}
+     * @expectedException BrsZfSloth\Exception\NotSetException
      */
     public function testMissingAlias()
     {
@@ -120,6 +119,34 @@ class ExprTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             'test_table.test_field = \'test\'',
+            (string) $e->render()
+        );
+    }
+
+    public function testGetDefAttr()
+    {
+        $e = new Expr('{:table},{alias1:table},{alias1:defaultOrder}');
+
+        $d = $this->getMockDefinition();
+        $d
+            ->expects($this->any())
+            ->method('getTable')
+            ->will($this->returnValue('test_table'))
+        ;
+        $d
+            ->expects($this->any())
+            ->method('getDefaultOrder')
+            ->will($this->returnValue('id asc'))
+        ;
+        // dbgd($d->getTable());
+
+        $e
+            ->addDefinitions(['alias1' => $d])
+            ->setDefaultDefinition($d)
+        ;
+
+        $this->assertEquals(
+            'test_table,test_table,id asc',
             (string) $e->render()
         );
     }

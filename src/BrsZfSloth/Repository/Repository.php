@@ -597,7 +597,12 @@ class Repository implements RepositoryInterface
             // ->where($where ? array($where) : array())
         ;
         if ($selectFn) {
-            $selectFn($select);
+            $selectFn($select, function ($expr, array $params = []) use ($def) {
+                $e = new Expr($expr);
+                $e->setDefaultDefinition($def);
+                $e->setParam($params);
+                return (string) $e->render();
+            });
         }
         if ($def->hasConstantValuesFields()) {
             foreach ($def->getConstantValuesFields() as $f) {
@@ -651,7 +656,7 @@ class Repository implements RepositoryInterface
 
         return new CacheableResult($this, $select, function($event) use ($statment, $select) {
             try {
-                // mpr($select->getSqlString());
+                // dbgd($select->getSqlString());
                 $resource = $statment->execute()->getResource();
                 $resource->setFetchMode(PDO::FETCH_ASSOC);
                 return $resource->fetchAll();
