@@ -24,6 +24,8 @@ class Field extends AbstractOptions
     const TYPE_TIMESTAMP = 'timestamp';
     const TYPE_ARRAY = 'array';
     const TYPE_JSON = 'json';
+    const TYPE_EMAIL = 'email';
+    const TYPE_DOUBLE_PRECISION = 'double_precision';
 
     public static $types = [
         self::TYPE_INTEGER => [
@@ -68,6 +70,12 @@ class Field extends AbstractOptions
             // 'assert' => 'objectClass',
             // 'assertParams' => ['stdclass'],
             'hydratorStrategyClass' => 'BrsZfSloth\Hydrator\Strategy\Json',
+        ],
+        self::TYPE_EMAIL => [
+            'assert' => 'email',
+        ],
+        self::TYPE_DOUBLE_PRECISION => [
+            'assert' => 'float',
         ],
     ];
 
