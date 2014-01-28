@@ -22,6 +22,8 @@ class Pgsql extends AbstractDescriptor
         'array' => Field::TYPE_ARRAY,
         'smallint' => Field::TYPE_SMALLINT,
         'numeric' => Field::TYPE_NUMERIC,
+        'user-defined' => Field::TYPE_CHARACTER_VARYING,
+        'double precision' => Field::TYPE_DOUBLE_PRECISION,
     ];
 
     public function describeDatabase($schema = Definition::DEFAULT_SCHEMA)
