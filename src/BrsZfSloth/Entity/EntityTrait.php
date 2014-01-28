@@ -180,8 +180,15 @@ trait EntityTrait
         return $this;
     }
 
-    public function toArray()
+    public function toArray(array $fields = null)
     {
+        if (is_array($fields)) {
+            $out = [];
+            foreach ($fields as $f) {
+                $out[$f] = $this->get($f);
+            }
+            return $out;
+        }
         return EntityTools::toArray($this);
     }
 
