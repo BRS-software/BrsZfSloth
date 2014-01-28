@@ -75,11 +75,11 @@ return [
     //         'zfcuser' => 'ZfcUser\Controller\UserController',
     //     ],
     // ],
-    // 'controller_plugins' => [
-    //     'invokables' => [
-    //         'zfcuserauthentication' => 'ZfcUser\Controller\Plugin\ZfcUserAuthentication',
-    //     ],
-    // ],
+    'controller_plugins' => [
+        'invokables' => [
+            'DefaultDbConnection' => 'BrsZfSloth\Controller\Plugin\DefaultDbConnection',
+        ],
+    ],
     // 'service_manager' => [
     //     'aliases' => [
     //         'zfcuser_zend_db_adapter' => 'Zend\Db\Adapter\Adapter',
