@@ -226,6 +226,50 @@ class Assert
         return $value;
     }
 
+    public static function email($value, $checkMx = false, $message = 'Email "%s" is invalid') {
+        // Create the syntactical validation regular expression
+        $regexp = "^([\+_a-z0-9-]+)(\.[\+_a-z0-9-]+)*@([a-z0-9-]+)(\.[a-z0-9-]+)*(\.[a-z]{2,4})$";
+
+        // Validate the syntax
+        if (!eregi($regexp, $value))
+            throw new AssertException(sprintf($message, $value));
+
+        if ($checkMx) {
+            list($username, $domaintld) = split("@", $email);
+            if (!getmxrr($domaintld, $mxrecords))
+                throw new AssertException(sprintf('Email "%s" is invalid. Mx not exists for domain %s', $value, $domaintld));
+        }
+        return $value;
+    }
+
+    public static function some($value, array $keys, $message = 'All keys %s are empty in %s')
+    {
+        self::arra($value);
+        foreach ($keys as $k) {
+            if (is_array($k)) {
+                try {
+                    self::any($value, $k);
+                    return $value;
+                } catch (AssertException $e) {
+                }
+            } elseif (! empty($value[$k])) {
+                return $value;
+            }
+        }
+        throw new AssertException(sprintf($message, self::valueToString($keys), self::valueToString($value)));
+    }
+
+    public static function any($value, array $keys, $message = 'Not all keys (%s) are set in %s')
+    {
+        self::arra($value);
+        foreach ($keys as $k) {
+            if (empty($value[$k])) {
+                throw new AssertException(sprintf($message, self::valueToString($keys), self::valueToString($value)));
+            }
+        }
+        return $value;
+    }
+
     public static function valueToString($value)
     {
         $type = gettype($value);
@@ -234,7 +278,7 @@ class Assert
         if (is_bool($value)) {
             $value = $value ? 'true' : 'false';
         } elseif (is_array($value)) {
-            $value = count($value);
+            $value = json_encode($value);
         } elseif (is_string($value)) {
             $preview = $value;
             $value = strlen($value);
