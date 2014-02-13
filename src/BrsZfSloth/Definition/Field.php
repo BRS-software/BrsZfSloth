@@ -36,7 +36,8 @@ class Field extends AbstractOptions
             'assert' => 'smallint',
         ],
         self::TYPE_NUMERIC => [
-            'assert' => 'numeric',
+            'assert' => 'float',
+            'hydratorStrategyClass' => 'BrsZfSloth\Hydrator\Strategy\Float',
         ],
         self::TYPE_TEXT => [
             'assert' => 'string',
@@ -54,12 +55,13 @@ class Field extends AbstractOptions
         ],
         self::TYPE_DATETIME => [
             'assert' => 'date',
-            'assertParams' => ['Y-m-d H:i:s.u'],
-            // 'hydratorStrategyClass' => 'BrsZfSloth\Hydrator\Hydrator\Strategy\Datetime',
+            'assertParams' => ['Y-m-d H:i:s'],
+            'hydratorStrategyClass' => 'BrsZfSloth\Hydrator\Strategy\RemoveMicrotime',
         ],
         self::TYPE_TIMESTAMP => [
             'assert' => 'date',
             'assertParams' => ['Y-m-d H:i:s'],
+            'hydratorStrategyClass' => 'BrsZfSloth\Hydrator\Strategy\RemoveMicrotime',
         ],
         self::TYPE_ARRAY => [
             'assert' => 'arra',
@@ -76,6 +78,7 @@ class Field extends AbstractOptions
         ],
         self::TYPE_DOUBLE_PRECISION => [
             'assert' => 'float',
+            'hydratorStrategyClass' => 'BrsZfSloth\Hydrator\Strategy\Float',
         ],
     ];
 
