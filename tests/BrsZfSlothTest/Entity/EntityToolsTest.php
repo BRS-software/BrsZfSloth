@@ -234,6 +234,23 @@ class EntityToolsTest extends \PHPUnit_Framework_TestCase
         EntityTools::assertFieldValue('firstName', $entity, $def);
     }
 
+    public function testSanitize()
+    {
+        $def = new Definition([
+            'name' => 'test',
+            'table' => 'test',
+            'fields' => [
+                'firstName' => 'text' ,
+            ]
+        ]);
+        $sanitized = EntityTools::sanitize([
+            'firstName' => 'xxx',
+            'ignoreThis' => 'yyy',
+        ], $def);
+
+        $this->assertEquals($sanitized, ['firstName' => 'xxx']);
+    }
+
     // /**
     //  * @dataProvider toEntityProvider
     //  */

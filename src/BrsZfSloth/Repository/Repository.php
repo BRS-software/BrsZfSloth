@@ -503,7 +503,7 @@ class Repository implements RepositoryInterface
         return $this->factoryEntity($data);
     }
 
-    public function factoryEntity(array $data = array())
+    public function factoryEntity(array $data = array(), $ignoreNonExistent = false)
     {
         $entityClass = $this->getDefinition()->getOptions()->getEntityClass();
         $entity = new $entityClass;
@@ -513,7 +513,7 @@ class Repository implements RepositoryInterface
             // TODO allow the use of * in select stataments
             // this will require additional data mapping (this will be slower)
             // $this->getDefinition()->getHydrator()->hydrate($data, $entity);
-            EntityTools::populate($data, $entity, $this->getDefinition());
+            EntityTools::populate($data, $entity, $this->getDefinition(), $ignoreNonExistent);
         }
 
         if ($entity instanceof OriginValuesFeatureInterface) {
@@ -597,12 +597,7 @@ class Repository implements RepositoryInterface
             // ->where($where ? array($where) : array())
         ;
         if ($selectFn) {
-            $selectFn($select, function ($expr, array $params = []) use ($def) {
-                $e = new Expr($expr);
-                $e->setDefaultDefinition($def);
-                $e->setParam($params);
-                return (string) $e->render();
-            });
+            $selectFn($select, $this->getConventer());
         }
         if ($def->hasConstantValuesFields()) {
             foreach ($def->getConstantValuesFields() as $f) {
@@ -611,6 +606,16 @@ class Repository implements RepositoryInterface
         }
 
         return $select;
+    }
+
+    public function getConventer()
+    {
+        return function ($expr, array $params = []) {
+            $e = new Expr($expr);
+            $e->setDefaultDefinition($this->getDefinition());
+            $e->setParam($params);
+            return (string) $e->render();
+        };
     }
 
     // public function getCacheId(/*[arg1, argN]*/)

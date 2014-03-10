@@ -174,9 +174,9 @@ trait EntityTrait
         return EntityTools::diff($this->toArray(), $this->getOriginValues());
     }
 
-    public function populate(array $values)
+    public function populate(array $values, $ignoreNonExistent = false)
     {
-        EntityTools::populate($values, $this);
+        EntityTools::populate($values, $this, null, $ignoreNonExistent);
         return $this;
     }
 
@@ -190,6 +190,11 @@ trait EntityTrait
             return $out;
         }
         return EntityTools::toArray($this);
+    }
+
+    public function isNew()
+    {
+        return ! $this->getRepository()->exists($this);
     }
 
     public function save()

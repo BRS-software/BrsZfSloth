@@ -133,12 +133,25 @@ class EntityTools {
         }, $definition);
     }
 
-    public static function populate(array $values, $entity, $definition = null)
+    public static function sanitize(array $values, Definition $definition)
     {
-        self::getDefinition($entity, $definition)
-            ->getHydrator()
-                ->hydrate($values, $entity)
-        ;
+        $result = [];
+        foreach ($definition as $field) {
+            $fName = $field->getName();
+            if (array_key_exists($fName, $values)) {
+                $result[$fName] = $values[$fName];
+            }
+        }
+        return $result;
+    }
+
+    public static function populate(array $values, $entity, $definition = null, $ignoreNonExistent = false)
+    {
+        $def = self::getDefinition($entity, $definition);
+        if ($ignoreNonExistent) {
+            $values = self::sanitize($values, $def);
+        }
+        $def->getHydrator()->hydrate($values, $entity);
         return $entity;
     }
 
