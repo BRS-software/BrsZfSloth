@@ -126,9 +126,15 @@ class Collection implements
         return $this->__allowedEntityClass;
     }
 
-    public function toArray()
+    public function toArray($mapModelsToArray = false)
     {
-        return $this->__entities;
+        if ($mapModelsToArray) {
+            return array_map(function ($v) {
+                return $v->toArray();
+            }, $this->__entities);
+        } else {
+            return $this->__entities;
+        }
     }
 
     public function isEmpty()
