@@ -13,7 +13,10 @@ class Float implements StrategyInterface
      */
     public function extract($value)
     {
-        return (float) $value;
+        if ($value !== null) {
+            return (float) $value;
+        }
+        return null;
     }
 
     /**
