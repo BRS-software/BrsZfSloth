@@ -1,7 +1,7 @@
 <?php
 namespace BrsZfSloth\Repository;
 
-
+use Closure;
 use Zend\Stdlib\AbstractOptions;
 // use Zend\Cache\Storage\Adapter\AbstractAdapter as CacheAdapter;
 // use Zend\Cache\StorageFactory as CacheFactory;
@@ -29,6 +29,7 @@ class RepositoryOptions extends AbstractOptions
     protected $caching; // enable/disable data cache
     protected $cache; // cache entities objects
     protected $clearCacheOnEvents = ['post.update', 'post.delete'];
+    protected $factoryEntity;
 
     public function __construct($options = null, DefaultOptions $defaultOptions = null)
     {
@@ -167,5 +168,22 @@ class RepositoryOptions extends AbstractOptions
     public function getClearCacheOnEvents()
     {
         return $this->clearCacheOnEvents;
+    }
+
+    public function setFactoryEntity(Closure $factoryEntity)
+    {
+        $this->factoryEntity = $factoryEntity;
+        return $this;
+    }
+
+    public function getFactoryEntity()
+    {
+        if (null === $this->factoryEntity) {
+            $this->setFactoryEntity(function ($data, $repository) {
+                $entityClass = $repository->getDefinition()->getOptions()->getEntityClass();
+                return new $entityClass;
+            });
+        }
+        return $this->factoryEntity;
     }
 }

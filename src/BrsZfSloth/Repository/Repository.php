@@ -33,28 +33,12 @@ use BrsZfSloth\Event\EntityAndChangesEventArgs;
 
 class Repository implements RepositoryInterface
 {
-    private static $instances = array();
-
     protected $definitionName;
     protected $definition;
     protected $options;
     protected $adapter;
     protected $eventManager;
     protected $cache;
-
-    public static function getInstance()
-    {
-        $class = get_called_class();
-        if (!isset(self::$instances[$class])) {
-            self::$instances[$class] = new $class();
-        }
-        return self::$instances[$class];
-    }
-
-    public static function reset()
-    {
-        self::$instances = array();
-    }
 
     public function __construct($options = null)
     {
@@ -159,6 +143,7 @@ class Repository implements RepositoryInterface
     public function insert($entity)
     {
         $this->definition->assertEntityClass($entity);
+        $this->applyAwareElements($entity);
         EntityTools::validate($entity, $this->getDefinition());
         $entityValues = EntityTools::toRepository($entity, $this->getDefinition());
 
@@ -189,8 +174,7 @@ class Repository implements RepositoryInterface
             if ($previous instanceof PDOException && $previous->getCode() == 23505) {
                 throw new Exception\DuplicateKeyException($previous->getMessage(), $previous->getCode(), $previous);
             }
-
-            throw new Exception\StatementException($insert->getSqlString(), 0, $e);
+            throw new Exception\StatementException($insert->getSqlString($this->adapter->getPlatform()), 0, $e);
         }
 
         // get last insert id
@@ -211,7 +195,7 @@ class Repository implements RepositoryInterface
             $entity->markAsOrigin();
         }
 
-        $this->eventManager->trigger('pre.insert', $event);
+        $this->eventManager->trigger('post.insert', $event);
 
         return $lastId;
     }
@@ -225,6 +209,7 @@ class Repository implements RepositoryInterface
     public function update($entity)
     {
         $this->definition->assertEntityClass($entity);
+        $this->applyAwareElements($entity);
         EntityTools::validate($entity, $this->getDefinition());
         $entityValues = EntityTools::toRepository($entity, $this->getDefinition());
 
@@ -274,7 +259,7 @@ class Repository implements RepositoryInterface
                 throw new Exception\DuplicateKeyException($previous->getMessage(), $previous->getCode(), $previous);
             }
 
-            throw new Exception\StatementException($update->getSqlString(), 0, $e);
+            throw new Exception\StatementException($update->getSqlString($this->adapter->getPlatform()), 0, $e);
         }
 
         // fuckup
@@ -303,6 +288,7 @@ class Repository implements RepositoryInterface
     public function delete($entity)
     {
         $this->definition->assertEntityClass($entity);
+        $this->applyAwareElements($entity);
 
         $where = new Where\Equal(
             $this->definition->getPrimary(),
@@ -327,7 +313,7 @@ class Repository implements RepositoryInterface
             $affected = $statment->execute()->getAffectedRows();
         } catch (DbException $e) {
             $this->eventManager->trigger('fail.delete', $event->setParam('exception', $e));
-            throw new Exception\StatementException($update->getSqlString(), 0, $e);
+            throw new Exception\StatementException($update->getSqlString($this->adapter->getPlatform()), 0, $e);
         }
 
         // fuckup
@@ -505,8 +491,8 @@ class Repository implements RepositoryInterface
 
     public function factoryEntity(array $data = array(), $ignoreNonExistent = false)
     {
-        $entityClass = $this->getDefinition()->getOptions()->getEntityClass();
-        $entity = new $entityClass;
+        $factory = $this->options->factoryEntity;
+        $entity = $factory($data, $this);
         $this->applyAwareElements($entity);
 
         if (! empty($data)) {
@@ -542,23 +528,40 @@ class Repository implements RepositoryInterface
         return $collection;
     }
 
-    public function existsSimilar($entity)
-    {
-        return 1 > $this->fetchSimilar($entity)->count();
-    }
-
-    public function fetchSimilar($entity)
+    public function getByUnique($entity, $uniqueKeyName)
     {
         $this->definition->assertEntityClass($entity);
-        $conditions = $entity->toArray();
-        unset($conditions[$this->definition->getPrimary()->name]);
+        $this->applyAwareElements($entity);
+
+        $conditions = [];
+        foreach ($this->definition->getOptions()->getUniqueKey($uniqueKeyName) as $fielName) {
+            $conditions[$fielName] = EntityTools::getValue($fielName, $entity, $this->definition);
+        }
+        return $this->get($conditions);
+    }
+
+    public function fetchSimilar($entity, array $fields = [])
+    {
+        $this->definition->assertEntityClass($entity);
+        $this->applyAwareElements($entity);
+
+        if ($fields) {
+            $conditions = [];
+            foreach ($fields as $fielName) {
+                $conditions[$fielName] = EntityTools::getValue($fielName, $entity, $this->definition);
+            }
+        } else {
+            $conditions = $entity->toArray();
+            unset($conditions[$this->definition->getPrimary()->name]);
+        }
         return $this->fetch($conditions);
     }
 
-    public function exists($entity)
+    public function isNew($entity)
     {
         $this->definition->assertEntityClass($entity);
-        return null !== EntityTools::getValue(
+        $this->applyAwareElements($entity);
+        return null === EntityTools::getValue(
             $this->definition->getPrimary(),
             $entity,
             $this->definition
@@ -568,18 +571,36 @@ class Repository implements RepositoryInterface
     public function save($entity)
     {
         $this->definition->assertEntityClass($entity);
+        $this->applyAwareElements($entity);
 
         //$this->eventManager->dispatchEvent(Events::preSave, $eventArgs);
 
-        if ($this->exists($entity)) {
-            $this->update($entity);
-        } else {
+        if ($this->isNew($entity)) {
             $this->insert($entity);
+        } else {
+            $this->update($entity);
         }
 
         //$this->eventManager->dispatchEvent(Events::postSave, $eventArgs);
 
         return $this;
+    }
+
+    public function insertOrGet($entity, $uniqueKeyName)
+    {
+        try {
+            $similar = $this->getByUnique($entity, $uniqueKeyName);
+            // $primary = $this->definition->getPrimary();
+            // EntityTools::setValue(
+            //     $primary,
+            //     EntityTools::getValue($primary, $similar, $this->definition),
+            //     $entity,
+            //     $this->definition
+            // );
+            EntityTools::populate($similar->toArray(), $entity, $this->definition);
+        } catch (Exception\NotFoundException $e) {
+            $this->save($entity);
+        }
     }
 
     public function getSelect(Closure $selectFn = null)
@@ -649,7 +670,7 @@ class Repository implements RepositoryInterface
             $this->getEventManager()->trigger('fail.select', $event->setParam('exception', $e));
             // debuge($select->getSqlString());
             //$this->rollbackTransaction();
-            throw new Exception\StatementException($select->getSqlString(), 0, $e);
+            throw new Exception\StatementException($select->getSqlString($this->adapter->getPlatform()), 0, $e);
         }
     }
 
@@ -722,21 +743,23 @@ class Repository implements RepositoryInterface
 
     protected function applyAwareElements($object)
     {
-        if ($object instanceof RepositoryAwareInterface) {
-            $object->setRepository($this);
-        }
-        if ($object instanceof DefinitionAwareInterface) {
-            $object->setDefinition($this->getDefinition());
-        }
-
-
-        if ($object instanceof ServiceManagerAwareInterface) {
-            try {
-                $object->setServiceManager($this->getOptions()->getServiceManager());
-
-            } catch (Exception\RuntimeException $e) {
-                // service manager maybe not set, that's no error
+        if (empty($object->__repositoryAppliedAwareElements)) {
+            if ($object instanceof RepositoryAwareInterface) {
+                $object->setRepository($this);
             }
+            if ($object instanceof DefinitionAwareInterface) {
+                $object->setDefinition($this->getDefinition());
+            }
+
+            if ($object instanceof ServiceManagerAwareInterface) {
+                try {
+                    $object->setServiceManager($this->getOptions()->getServiceManager());
+
+                } catch (Exception\RuntimeException $e) {
+                    // service manager maybe not set, that's no error
+                }
+            }
+            $object->__repositoryAppliedAwareElements = true;
         }
         return $object;
     }

@@ -39,13 +39,8 @@ interface RepositoryInterface extends DefinitionAwareInterface
     public function count(Where $where = null);
 
     public function getDsn();
-
-    /**
-     * Check whether model exists in repository
-     * @param $entity
-     * @return bool
-     */
-    public function existsSimilar($entity);
+    public function getByUnique($entity, $uniqueKeyName);
+    public function insertOrGet($entity, $uniqueKeyName);
 
     /**
      * Return similar entity
@@ -59,7 +54,7 @@ interface RepositoryInterface extends DefinitionAwareInterface
      * @param $entity
      * @return bool
      */
-    public function exists($entity);
+    public function isNew($entity);
 
     public function save($entity);
 

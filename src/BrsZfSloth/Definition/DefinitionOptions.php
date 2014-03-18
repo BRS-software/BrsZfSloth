@@ -5,6 +5,7 @@ use Zend\Stdlib\AbstractOptions;
 use Zend\Stdlib\Hydrator\HydratorInterface;
 
 use BrsZfSloth\Sloth;
+use BrsZfSloth\Assert;
 use BrsZfSloth\Exception;
 use BrsZfSloth\Options as DefaultOptions;
 
@@ -16,6 +17,7 @@ class DefinitionOptions extends AbstractOptions
     protected $hydratorClass;
     protected $hydrator;
     protected $defaultOrder = array('id' => SORT_ASC);
+    protected $uniqueKeys = [];
 
     public function __construct($options = null, DefaultOptions $defaultOptions = null)
     {
@@ -135,5 +137,31 @@ class DefinitionOptions extends AbstractOptions
     public function getDefaultOrder()
     {
         return $this->defaultOrder;
+    }
+
+    public function setUniqueKeys(array $uniqueKeys)
+    {
+        $this->uniqueKeys = $uniqueKeys;
+        return $this;
+    }
+
+    public function getUniqueKeys()
+    {
+        return $this->uniqueKeys;
+    }
+
+    public function hasUniqueKey($name)
+    {
+        return array_key_exists($name, $this->getUniqueKeys());
+    }
+
+    public function getUniqueKey($name)
+    {
+        if (! $this->hasUniqueKey($name)) {
+            throw new Exception\OutOfBoundsException(
+                sprintf('unique key %s does not defined in definition', $name)
+            );
+        }
+        return Assert::notEmpty($this->getUniqueKeys()[$name]);
     }
 }

@@ -40,9 +40,10 @@ class Definition implements
     protected $defaultOrder;
     protected $primary;
     protected $originFile;
-    protected $fields = array();
-    protected $mapping = array();
+    protected $fields = [];
+    protected $mapping = [];
     protected $constantValuesFields;
+    protected $uniqueKeys = [];
 
 
     public static function reset()
