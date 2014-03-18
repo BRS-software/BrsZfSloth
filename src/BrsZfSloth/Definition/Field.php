@@ -263,6 +263,11 @@ class Field extends AbstractOptions
         if ($this->hasConstantValue()) {
             return $this->getConstantValue();
         }
+
+        // hack - maybe later will be need make a better solution
+        if ($this->default === 'now()') {
+            return date($this->assertParams[0]);
+        }
         // default value must be validated
         // better to do it here, because if it has changed assertParams, the validation would be incorrect
         // return $this->assertValue($this->default);
