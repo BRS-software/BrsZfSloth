@@ -93,10 +93,23 @@ class Pgsql extends AbstractDescriptor
                 'primary' => false,
             ];
 
+            switch (strtolower($config['default'])) {
+                case 'true':
+                    $config['default'] = true;
+                    break;
+                case 'false':
+                    $config['default'] = false;
+                    break;
+                case 'null':
+                    $config['default'] = null;
+                    break;
+            }
+
             // XXX how detect primary?
             if (preg_match('/^nextval/', $f['column_default'])) {
                 $name = 'id';
                 $config['default'] = null;
+                $config['notNull'] = false;
                 $config['primary'] = true;
                 $config['sequence'] = $f['column_default'];
             }
