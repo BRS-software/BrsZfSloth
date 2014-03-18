@@ -25,7 +25,7 @@ return [
                 // ],
                 'BrsZfSloth.Definition.Init' => [
                     'options' => [
-                        'route'    => 'sloth definition init [--skip-existing|-s]',
+                        'route'    => 'sloth def init [--skip-existing|-s]',
                         'defaults' => [
                             'controller' => 'BrsZfSloth.Controller.Generator',
                             'action'     => 'initdb',
@@ -34,7 +34,7 @@ return [
                 ],
                 'BrsZfSloth.Definition.Generate' => [
                     'options' => [
-                        'route'    => 'sloth definition generate <table>',
+                        'route'    => 'sloth def generate <table>',
                         'constraints' => [
                             'table' => '/^([a-z0-9_]*\.)?[a-z0-9_]{1,}$/'
                         ],
@@ -46,7 +46,7 @@ return [
                 ],
                 'BrsZfSloth.Definition.FlushCache' => [
                     'options' => [
-                        'route'    => 'sloth definition clearcache <definition>',
+                        'route'    => 'sloth def clearcache <definition>',
                         'constraints' => [
                             'definition' => '/^([a-z0-9_]*\.)?[a-z0-9_]{1,}$/'
                         ],

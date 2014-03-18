@@ -22,10 +22,10 @@ class Module extends AbstractModule implements ConsoleBannerProviderInterface
 BRS ZF SLOTH
 ==--------==
 usage:
-sloth definition init [--skip-existing]         init all db tables
-sloth definition generate <table>               generate definition for table
-sloth definition clearcache <definitionName>    clear definition cache
-sloth definition flushcache                     flush all definitions cache
+sloth def init [--skip-existing]         init all db tables
+sloth def generate <table>               generate definition for table
+sloth def clearcache <definitionName>    clear definition cache
+sloth def flushcache                     flush all definitions cache
 EOF;
     }
 
