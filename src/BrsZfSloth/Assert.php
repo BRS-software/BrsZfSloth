@@ -15,6 +15,16 @@ class Assert
         return $value;
     }
 
+    public static function classExists($value)
+    {
+        if (! class_exists($value)) {
+            throw new AssertException(
+                sprintf('class %s does not exists', self::valueToString($value))
+            );
+        }
+        return $value;
+    }
+
     public static function characterVarying($value, $max)
     {
         return self::string($value, 0, $max);
