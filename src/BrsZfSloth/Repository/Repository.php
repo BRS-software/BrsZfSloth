@@ -142,7 +142,10 @@ class Repository implements RepositoryInterface
 
     public function insert($entity)
     {
-        $this->definition->assertEntityClass($entity);
+        $this->definition
+            ->assertUpdatable()
+            ->assertEntityClass($entity)
+        ;
         $this->applyAwareElements($entity);
         EntityTools::validate($entity, $this->getDefinition());
         $entityValues = EntityTools::toRepository($entity, $this->getDefinition());
@@ -157,14 +160,14 @@ class Repository implements RepositoryInterface
         $event = new Event\EntityOperation($this, $entity);
         $this->eventManager->trigger('pre.insert', $event);
 
-        $statment = $this->adapter->createStatement();
+        $statement = $this->adapter->createStatement();
         $insert = (new ZfSql\Insert($this->getDefinition()->getTable()))
             ->values($entityValues)
         ;
-        $insert->prepareStatement($this->adapter, $statment);
+        $insert->prepareStatement($this->adapter, $statement);
 
         try {
-            $affected = $statment->execute()->getAffectedRows();
+            $affected = $statement->execute()->getAffectedRows();
 
         } catch (DbException $e) {
             $this->eventManager->trigger('fail.insert', $event->setParam('exception', $e));
@@ -208,7 +211,10 @@ class Repository implements RepositoryInterface
      */
     public function update($entity)
     {
-        $this->definition->assertEntityClass($entity);
+        $this->definition
+            ->assertUpdatable()
+            ->assertEntityClass($entity)
+        ;
         $this->applyAwareElements($entity);
         EntityTools::validate($entity, $this->getDefinition());
         $entityValues = EntityTools::toRepository($entity, $this->getDefinition());
@@ -238,18 +244,18 @@ class Repository implements RepositoryInterface
         );
         $where->setDefaultDefinition($this); // XXX to można jakoś zautomatyzować?
 
-        $statment = $this->adapter->createStatement();
+        $statement = $this->adapter->createStatement();
         $update = (new ZfSql\Update($this->definition->getTable()))
             ->set($entityValues)
             ->where(array($where))
         ;
-        $update->prepareStatement($this->adapter, $statment);
+        $update->prepareStatement($this->adapter, $statement);
 
 
         $event = new Event\EntityOperation($this, $entity);
         $this->eventManager->trigger('pre.update', $event);
         try {
-            $affected = $statment->execute()->getAffectedRows();
+            $affected = $statement->execute()->getAffectedRows();
         } catch (DbException $e) {
             $this->eventManager->trigger('fail.update', $event->setParam('exception', $e));
 
@@ -287,7 +293,10 @@ class Repository implements RepositoryInterface
 
     public function delete($entity)
     {
-        $this->definition->assertEntityClass($entity);
+        $this->definition
+            ->assertUpdatable()
+            ->assertEntityClass($entity)
+        ;
         $this->applyAwareElements($entity);
 
         $where = new Where\Equal(
@@ -300,20 +309,20 @@ class Repository implements RepositoryInterface
         );
         $where->setDefaultDefinition($this);
 
-        $statment = $this->adapter->createStatement();
+        $statement = $this->adapter->createStatement();
         $delete = (new ZfSql\Delete($this->definition->getTable()))
             ->where(array($where))
         ;
-        $delete->prepareStatement($this->adapter, $statment);
+        $delete->prepareStatement($this->adapter, $statement);
 
         $event = new Event\EntityOperation($this, $entity);
         $this->eventManager->trigger('pre.delete', $event);
 
         try {
-            $affected = $statment->execute()->getAffectedRows();
+            $affected = $statement->execute()->getAffectedRows();
         } catch (DbException $e) {
             $this->eventManager->trigger('fail.delete', $event->setParam('exception', $e));
-            throw new Exception\StatementException($update->getSqlString($this->adapter->getPlatform()), 0, $e);
+            throw new Exception\StatementException($delete->getSqlString($this->adapter->getPlatform()), 0, $e);
         }
 
         // fuckup
@@ -339,10 +348,27 @@ class Repository implements RepositoryInterface
      */
     public function deleteAll()
     {
+        $this->definition
+            ->assertUpdatable()
+        ;
         $this->eventManager->dispatchEvent(Events::preDeleteAll, $eventArgs);
         $aff = $this->adapter->delete($this->getTableName());
         $this->eventManager->dispatchEvent(Events::postDeleteAll, $eventArgs);
         return $aff;
+    }
+
+    public function prepareStatement(ZfSql\PreparableSqlInterface $sql)
+    {
+        $statement = $this->adapter->createStatement();
+        if ($sql instanceof ZfSql\Update) {
+            $sql->table($this->definition->getTable());
+        } elseif ($sql instanceof ZfSql\Insert) {
+            $sql->into($this->definition->getTable());
+        } elseif ($sql instanceof ZfSql\Delete) {
+            $sql->from($this->definition->getTable());
+        }
+        $sql->prepareStatement($this->adapter, $statement);
+        return $statement;
     }
 
     public function count(Where $where = null)
@@ -492,7 +518,7 @@ class Repository implements RepositoryInterface
     public function factoryEntity(array $data = array(), $ignoreNonExistent = false)
     {
         $factory = $this->options->factoryEntity;
-        $entity = $factory($data, $this);
+        $entity = $factory($data, $this, $this->getOptions()->getServiceManager());
         $this->applyAwareElements($entity);
 
         if (! empty($data)) {
@@ -528,16 +554,37 @@ class Repository implements RepositoryInterface
         return $collection;
     }
 
-    public function getByUnique($entity, $uniqueKeyName)
+    public function getByUnique($uniqueKeyName, array $conditions)
     {
-        $this->definition->assertEntityClass($entity);
-        $this->applyAwareElements($entity);
-
-        $conditions = [];
-        foreach ($this->definition->getOptions()->getUniqueKey($uniqueKeyName) as $fielName) {
-            $conditions[$fielName] = EntityTools::getValue($fielName, $entity, $this->definition);
+        $uniqueKeys = $this->definition->getOptions()->getUniqueKey($uniqueKeyName);
+        $test = array_diff($uniqueKeys, array_keys($conditions));
+        if (! empty($test)) {
+            throw new Exception\LogicException(
+                sprintf('All values of unique %s key are required to get record by unique. Required keys (%s), given keys (%s)', $uniqueKeyName, implode(', ', $uniqueKeys), implode(', ', array_keys($conditions)))
+            );
         }
-        return $this->get($conditions);
+        return $this->get(array_intersect_key($conditions, array_flip($uniqueKeys)));
+    }
+
+    public function findUniqueValues($uniqueKeyName, array $values, Closure $nextKeyFn, Closure $onFind = null, $maxTry = 100)
+    {
+        $originValues = $values;
+        $counter = 0;
+        do {
+            try {
+                $finded = $this->getByUnique($uniqueKeyName, $values);
+                if ($onFind) {
+                    $onFind($finded, $values);
+                }
+                $values = $nextKeyFn($values, $counter++, $originValues);
+
+            } catch (Exception\NotFoundException $e) {
+                return $values;
+            }
+
+        } while ($counter < $maxTry);
+
+        throw new Exception\OutOfRangeException('Maximum trying exceded');
     }
 
     public function fetchSimilar($entity, array $fields = [])
@@ -589,17 +636,14 @@ class Repository implements RepositoryInterface
     public function insertOrGet($entity, $uniqueKeyName)
     {
         try {
-            $similar = $this->getByUnique($entity, $uniqueKeyName);
-            // $primary = $this->definition->getPrimary();
-            // EntityTools::setValue(
-            //     $primary,
-            //     EntityTools::getValue($primary, $similar, $this->definition),
-            //     $entity,
-            //     $this->definition
-            // );
+            $conditions = [];
+            foreach ($this->definition->getOptions()->getUniqueKey($uniqueKeyName) as $fielName) {
+                $conditions[$fielName] = EntityTools::getValue($fielName, $entity, $this->definition);
+            }
+            $similar = $this->getByUnique($uniqueKeyName, $conditions);
             EntityTools::populate($similar->toArray(), $entity, $this->definition);
         } catch (Exception\NotFoundException $e) {
-            $this->save($entity);
+            $this->insert($entity);
         }
     }
 
@@ -649,16 +693,16 @@ class Repository implements RepositoryInterface
     // Default method for getBy(), fetchBy()
     public function select(Closure $selectFn = null)
     {
-        $statment = $this->adapter->createStatement();
+        $statement = $this->adapter->createStatement();
         $select = $this->getSelect($selectFn);
-        $select->prepareStatement($this->adapter, $statment);
+        $select->prepareStatement($this->adapter, $statement);
 
         $event = new Event\Query($this, $select);
 
         try {
             $this->getEventManager()->trigger('pre.select', $event);
 
-            $resource = $statment->execute()->getResource();
+            $resource = $statement->execute()->getResource();
             $resource->setFetchMode(PDO::FETCH_ASSOC);
             $result = $resource->fetchAll();
 
@@ -676,14 +720,14 @@ class Repository implements RepositoryInterface
 
     protected function selectCacheable(Closure $selectFn = null)
     {
-        $statment = $this->adapter->createStatement();
+        $statement = $this->adapter->createStatement();
         $select = $this->getSelect($selectFn);
-        $select->prepareStatement($this->getAdapter(), $statment);
+        $select->prepareStatement($this->getAdapter(), $statement);
 
-        return new CacheableResult($this, $select, function($event) use ($statment, $select) {
+        return new CacheableResult($this, $select, function($event) use ($statement, $select) {
             try {
                 // dbgd($select->getSqlString());
-                $resource = $statment->execute()->getResource();
+                $resource = $statement->execute()->getResource();
                 $resource->setFetchMode(PDO::FETCH_ASSOC);
                 return $resource->fetchAll();
 

@@ -39,7 +39,7 @@ interface RepositoryInterface extends DefinitionAwareInterface
     public function count(Where $where = null);
 
     public function getDsn();
-    public function getByUnique($entity, $uniqueKeyName);
+    public function getByUnique($uniqueKeyName, array $conditions);
     public function insertOrGet($entity, $uniqueKeyName);
 
     /**
