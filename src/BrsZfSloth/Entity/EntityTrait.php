@@ -73,6 +73,14 @@ trait EntityTrait
         return $this->$setter($value);
     }
 
+    public function reset($field)
+    {
+        foreach ((array) $field as $f) {
+            unset($this->__values[$f]);
+        }
+        return $this;
+    }
+
     // public function setServiceManager(ServiceManager $serviceManager)
     // {
     //     $this->__serviceManager = $serviceManager;
@@ -194,7 +202,7 @@ trait EntityTrait
 
     public function isNew()
     {
-        return ! $this->getRepository()->exists($this);
+        return $this->getRepository()->isNew($this);
     }
 
     public function save()
