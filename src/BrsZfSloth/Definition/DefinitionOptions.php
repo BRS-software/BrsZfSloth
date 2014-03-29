@@ -18,6 +18,7 @@ class DefinitionOptions extends AbstractOptions
     protected $hydrator;
     protected $defaultOrder = array('id' => SORT_ASC);
     protected $uniqueKeys = [];
+    protected $isTableUpdatable = true;
 
     public function __construct($options = null, DefaultOptions $defaultOptions = null)
     {
@@ -163,5 +164,16 @@ class DefinitionOptions extends AbstractOptions
             );
         }
         return Assert::notEmpty($this->getUniqueKeys()[$name]);
+    }
+
+    public function setIsTableUpdatable($isTableUpdatable)
+    {
+        $this->isTableUpdatable = (bool) $isTableUpdatable;
+        return $this;
+    }
+
+    public function getIsTableUpdatable()
+    {
+        return $this->isTableUpdatable;
     }
 }

@@ -43,7 +43,7 @@ class Definition implements
     protected $fields = [];
     protected $mapping = [];
     protected $constantValuesFields;
-    protected $uniqueKeys = [];
+    // protected $uniqueKeys = [];
 
 
     public static function reset()
@@ -378,6 +378,16 @@ class Definition implements
         return $this;
     }
 
+    public function assertUpdatable()
+    {
+        if (! $this->getOptions()->getIsTableUpdatable()) {
+            throw new Exception\UnsupportedException(
+                sprintf('table %s is not updatable', $this->getTable())
+            );
+        }
+        return $this;
+    }
+
     public function assertCollectionClass($collection)
     {
         $allowedClass = $this->getOptions()->getCollectionClass();
@@ -594,6 +604,7 @@ class Definition implements
             'name' => $this->getName(),
             'schema' => $this->getSchema(),
             'table' => $this->getTable(),
+            'isTableUpdatable' => $this->getOptions()->getIsTableUpdatable(),
             'entityClass' => $this->getOptions()->getEntityClass(),
             'collectionClass' => $this->getOptions()->getCollectionClass(),
             'hydratorClass' => $this->getOptions()->getHydratorClass(),
