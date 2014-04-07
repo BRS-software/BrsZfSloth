@@ -185,13 +185,15 @@ class Repository implements RepositoryInterface
             $this->definition->getLastGeneratedValueParam()
         );
 
-        // set id value in entity
-        EntityTools::setValue(
-            $this->definition->getPrimary(),
-            $lastId,
-            $entity,
-            $this->definition
-        );
+        if ($lastId) { // id may be set before inserting
+            // set id value in entity
+            EntityTools::setValue(
+                $this->definition->getPrimary(),
+                $lastId,
+                $entity,
+                $this->definition
+            );
+        }
         // mprd(EntityTools::toArray($entity, $this->getDefinition()));
 
         if ($entity instanceof OriginValuesFeatureInterface) {
@@ -375,6 +377,13 @@ class Repository implements RepositoryInterface
     {
 
         return $this->_count($where);
+    }
+
+    public function getNextId()
+    {
+        $primary = $this->definition->getPrimary();
+        $statement = $this->adapter->query('select ' . $primary->getSequence());
+        return $statement->execute()->next()['nextval'];
     }
 
     /**
