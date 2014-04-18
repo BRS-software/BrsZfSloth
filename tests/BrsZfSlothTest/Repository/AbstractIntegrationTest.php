@@ -155,6 +155,7 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
             'definition' => $this->getTestDefinition(),
         ]);
 
+        $this->assertEquals(1, $repo->get("LOWER({nick})=LOWER(:?)", ['TESTER1'])->id);
         $this->assertEquals(1, $repo->get('nick', 'tester1')->id);
         $this->assertEquals(1, $repo->get("{nick}='tester1'")->id);
         $this->assertEquals(1, $repo->get(['nick' => 'tester1'])->id);
@@ -372,7 +373,7 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(3, $repo->fetch()->count());
         // fetch with order
         $this->assertEquals(3, $repo->fetch(function(\Zend\Db\Sql\Select $select) {
-            $select->order(new Order('nick', SORT_DESC));
+            $select->reset('order')->order(new Order('nick', SORT_DESC));
         })[0]->id);
         // fetch with limit
         $this->assertEquals(2, $repo->fetch(function(\Zend\Db\Sql\Select $select) {

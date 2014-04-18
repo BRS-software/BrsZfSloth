@@ -98,85 +98,33 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
             ->method('assertEntityClass')
             ->will($this->returnValue($options->getDefinition()))
         ;
-// mprd($options->getDefinition()->getHydrator());
-        // // hydrator
-        // $hydrator = $this->getMock('Zend\Stdlib\Hydrator\HydratorInterface');
-        // $hydrator
-        //     ->expects($this->exactly(1))
-        //     ->method('hydrate')
-        //     ->with($this->equalTo($entityProp), $this->isInstanceOf($entityClass))
-        // ;
-        // $options
-        //     ->getDefinition()
-        //         ->getOptions()
-        //             ->expects($this->exactly(1))
-        //             ->method('getHydrator')
-        //             ->will($this->returnValue($hydrator))
-        // ;
+        $options
+            ->expects($this->exactly(1))
+            ->method('getFactoryEntity')
+            ->will($this->returnValue(
+                function ($data, $repository) {
+                    $entityClass = $repository->getDefinition()->getOptions()->getEntityClass();
+                    return new $entityClass;
+                }
+            ))
+        ;
 
         $r = new Repository($options);
         $entity = $r->createEntity($entityProp);
         $this->assertInstanceOf($entityClass, $entity);
     }
 
-    // public function testInsert()
-    // {
-    //     // $options = $this->getMock('BrsZfSloth\Repository\RepositoryOptions');
-
-    //     // // XXX difficult make mock definition
-    //     // $options
-    //     //     ->expects($this->any())
-    //     //     ->method('getDefinition')
-    //     //     ->will($this->returnValue(new Definition([
-    //     //         'name' => 'testdef',
-    //     //         'table' => 'test',
-    //     //         'fields' => [
-    //     //             'id' => 'integer',
-    //     //             'name' => 'text',
-    //     //         ]
-    //     //     ])))
-    //     // ;
-
-    //     $dbAdapter = $this->getMockDbAdapter();
-    //     $dbAdapter->expects($this->exactly(1))->method('createStatement')->will($this->returnValue(
-    //         $this->getMock('Zend\Db\Adapter\StatementContainerInterface')
-    //     ));
-    //     $dbAdapter->expects($this->any())->method('getPlatform')->will($this->returnValue(
-    //         $this->getMock('Zend\Db\Adapter\Platform\PlatformInterface')
-    //     ));
-    //     // mprd($dbAdapter->getPlatform());
-
-    //     $r = new Repository([
-    //         'dbAdapter' => $dbAdapter,
-    //         'definition' => [
-    //             'name' => 'testdef',
-    //             'table' => 'test',
-    //             'fields' => [
-    //                 'id' => 'integer',
-    //                 'name' => 'text',
-    //             ]
-    //         ]
-    //     ]);
-    //     // mprd($r);
-    //     $id = $r->insert((object) ['id' => 123, 'name' => 'test']);
-    //     mprd($id);
-
-    //     // $this->assertInstanceOf($entityClass, $entity);
-
-    // }
-
     public function testCreateCollection()
     {
         $options = $this->getMockOptions();
-        $options
-            ->getDefinition()
-                ->getOptions()
-                    ->expects($this->exactly(1))
-                    ->method('getCollectionClass')
-                    ->will($this->returnValue($collectionClass = get_class($this->getMock('ArrayAccess'))))
+        $options->getDefinition() ->getOptions()
+            ->expects($this->exactly(1))
+            ->method('getCollectionClass')
+            ->will($this->returnValue($collectionClass = get_class($this->getMock('ArrayAccess'))))
         ;
+        // dbg($options->getDefinition()->getOptions()->getCollectionClass());
         $r = new Repository($options);
-        $collection = $r->createCollection();
+        $collection = $r->factoryCollection();
         $this->assertInstanceOf($collectionClass, $collection);
     }
 
@@ -218,6 +166,7 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
                 []
             ))
         ;
+
         return $options;
     }
 
