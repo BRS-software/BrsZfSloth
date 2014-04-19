@@ -113,6 +113,16 @@ class RepositoryOptions extends AbstractOptions
         return $this->eventManagerClass;
     }
 
+    public function hasServiceManager()
+    {
+        try {
+            $this->getServiceManager();
+            return true;
+        } catch (Exception\RuntimeException $e) {
+            return false;
+        }
+    }
+
     public function setServiceManager(ServiceManager $serviceManager)
     {
         $this->serviceManager = $serviceManager;
