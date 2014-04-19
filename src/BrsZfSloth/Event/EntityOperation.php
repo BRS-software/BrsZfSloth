@@ -7,6 +7,7 @@ use BrsZfSloth\Exception;
 use BrsZfSloth\Exception\ExceptionTools;
 use BrsZfSloth\Repository;
 use BrsZfSloth\Entity\Entity;
+use BrsZfSloth\Entity\EntityTools;
 use BrsZfSloth\Entity\Feature\GetChangesFeatureInterface;
 
 class EntityOperation extends Event
@@ -39,9 +40,13 @@ class EntityOperation extends Event
      */
     public function onChange($fieldName, \Closure $fn)
     {
-        $ch = $this->getChanges();
-        if (array_key_exists($fieldName, $ch)) {
-            $fn($ch[$fieldName]['new'], $ch[$fieldName]['old']);
+        if (in_array($this->getName(), ['pre.insert', 'post.insert'])) {
+            $fn(EntityTools::getValue($fieldName, $this->getParam('entity')), null);
+        } else {
+            $ch = $this->getChanges();
+            if (array_key_exists($fieldName, $ch)) {
+                $fn($ch[$fieldName]['new'], $ch[$fieldName]['old']);
+            }
         }
     }
 }
