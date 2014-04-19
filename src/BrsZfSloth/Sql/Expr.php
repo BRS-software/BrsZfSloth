@@ -18,6 +18,7 @@ class Expr implements PredicateInterface
     const DEFAULT_DEFINITION_ALIAS = 'DEFAULT_ALIAS';
 
     protected $expr;
+    protected $parsedExpr;
     protected $parseCache;
     protected $params = array();
     protected $fields = array();
@@ -140,13 +141,30 @@ class Expr implements PredicateInterface
         });
     }
 
+    public function getParsedExpr()
+    {
+        if (null === $this->parsedExpr) {
+            $this->parsedExpr = $this->expr;
+
+            // replace ':? :?' => ':val1 :valN'
+            if (false !== strpos($this->parsedExpr, ':?')) { // for performance
+                $valCounter = 0;
+                $this->parsedExpr = preg_replace_callback('/\:\?/', function ($m) use (&$valCounter) {
+                    return ':' . $valCounter++;
+                }, $this->parsedExpr);
+            }
+        }
+        return $this->parsedExpr;
+    }
+
     protected function parse()
     {
         if (null !== $this->parseCache) {
             return $this->parseCache;
         }
 
-        $expr = $this->expr;
+        $expr = $this->getParsedExpr();
+
         // $expr = '{Fid\Ba.field}={Fname} > :Psrame :Pdame {Fparame}=:Pparame';
         // $expr = '{Fid}';
         // $expr = 'aaa {Fid}';
@@ -155,6 +173,7 @@ class Expr implements PredicateInterface
         // $expr = 'aaa :Pid::text';
 
         $expr = str_replace('::', ';;', $expr); // because while sql cast ::text regexp catch as param
+
 
         $result = [
             'matched' => [],
@@ -194,7 +213,7 @@ class Expr implements PredicateInterface
             //     throw new Exception\RuntimeException(sprintf('Undefined field "%s" in expression "%s"', $field, $this->expr));
             // }
         }
-        return new self(str_replace(array_keys($replace), array_values($replace), $this->expr));
+        return new self(str_replace(array_keys($replace), array_values($replace), $this->getParsedExpr()));
     }
 
     protected function getIdentifier($field)
@@ -236,7 +255,7 @@ class Expr implements PredicateInterface
         $parsed = $this->parse();
 // dbgd($parsed);
         $exprData = array(
-            'e' => str_replace('%', '%%', $this->expr),  // expr will be used in vsprintf()
+            'e' => str_replace('%', '%%', $this->getParsedExpr()),  // expr will be used in vsprintf()
             'p' => array(), // params
             't' => array(), // types
         );

@@ -70,6 +70,18 @@ class ExprTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(array('field1','field2'), $e->getParsedFields());
     }
 
+    public function testQuestionMarkAsParams()
+    {
+        $e = new Expr(':? :::?');
+        $this->assertEquals(array('0','1'), $e->getParsedParams());
+    }
+
+    public function testAssignValuesToQuestionMarkAsParams()
+    {
+        $e = new Expr(':? :::?');
+        $this->assertEquals('x ::y', (string) $e->render(['x','y']));
+    }
+
     /**
      * @expectedException BrsZfSloth\Exception\NotSetException
      */
