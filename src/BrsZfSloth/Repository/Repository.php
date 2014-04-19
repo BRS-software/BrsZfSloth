@@ -258,6 +258,10 @@ class Repository implements RepositoryInterface
         $this->eventManager->trigger('pre.update', $event);
         try {
             $affected = $statement->execute()->getAffectedRows();
+
+            if ($entity instanceof OriginValuesFeatureInterface) {
+                $entity->markAsOrigin();
+            }
         } catch (DbException $e) {
             $this->eventManager->trigger('fail.update', $event->setParam('exception', $e));
 
@@ -284,11 +288,6 @@ class Repository implements RepositoryInterface
         }
 
         $this->eventManager->trigger('post.update', $event); // after exec markAsOrigin() changes will be not available
-
-        if ($entity instanceof OriginValuesFeatureInterface) {
-            $entity->markAsOrigin();
-        }
-
 
         return $affected;
     }
@@ -526,8 +525,8 @@ class Repository implements RepositoryInterface
 
     public function factoryEntity(array $data = array(), $ignoreNonExistent = false)
     {
-        $factory = $this->options->factoryEntity;
-        $entity = $factory($data, $this, $this->getOptions()->getServiceManager());
+        $factory = $this->options->getFactoryEntity();
+        $entity = $factory($data, $this, $this->getOptions()->hasServiceManager() ? $this->getOptions()->getServiceManager() : null);
         $this->applyAwareElements($entity);
 
         if (! empty($data)) {
@@ -758,6 +757,10 @@ class Repository implements RepositoryInterface
                 return new Where\Bool($fieldName, $val);
             } elseif (null === $val) {
                 return new Where\Nul($fieldName);
+            } elseif (is_array($val)) {
+                $where = new Where($fieldName);
+                $where->setParam($val);
+                return $where;
             } else {
                 return new Where\Equal($fieldName, $val);
             }
