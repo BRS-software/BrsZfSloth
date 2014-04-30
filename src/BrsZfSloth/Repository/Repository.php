@@ -539,6 +539,10 @@ class Repository implements RepositoryInterface
         if ($entity instanceof OriginValuesFeatureInterface) {
             $entity->markAsOrigin($data ?: null);
         }
+
+        // XXX how will be with performance, maybe config options should enable to throw events in this place?
+        $this->eventManager->trigger('create.entity', new Event\EntityOperation($this, $entity));
+
         return $entity;
     }
 
