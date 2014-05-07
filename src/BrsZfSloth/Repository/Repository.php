@@ -234,7 +234,6 @@ class Repository implements RepositoryInterface
             }
             $entityValues = $tmp;
         }
-        // mprd($entityValues['is_active']);
 
         $where = new Where\Equal(
             $this->definition->getPrimary(),
@@ -255,6 +254,8 @@ class Repository implements RepositoryInterface
 
 
         $event = new Event\EntityOperation($this, $entity);
+        $event->setChanges($changes);
+
         $this->eventManager->trigger('pre.update', $event);
         try {
             $affected = $statement->execute()->getAffectedRows();
