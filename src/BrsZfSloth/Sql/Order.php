@@ -99,4 +99,28 @@ class Order extends Expr {
 
         return new Expr(implode(',', $coll));
     }
+
+    public function setDefaultDefinition($definition)
+    {
+        foreach ($this->rules as $r) {
+            $r->setDefaultDefinition($definition);
+        }
+        return parent::setDefaultDefinition(($definition));
+    }
+
+    public function setDefinition($definition, $alias = null)
+    {
+        foreach ($this->rules as $r) {
+            $r->setDefinition($definition, $alias);
+        }
+        return parent::setDefinition($definition, $alias);
+    }
+
+    public function addDefinition($definition, $alias = null)
+    {
+        foreach ($this->rules as $r) {
+            $r->addDefinition($definition, $alias);
+        }
+        return parent::addDefinition($definition, $alias);
+    }
 }
