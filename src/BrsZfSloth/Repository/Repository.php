@@ -221,6 +221,8 @@ class Repository implements RepositoryInterface
         EntityTools::validate($entity, $this->getDefinition());
         $entityValues = EntityTools::toRepository($entity, $this->getDefinition());
 
+        $event = new Event\EntityOperation($this, $entity);
+
         if ($entity instanceof GetChangesFeatureInterface) {
             $changes = $entity->getChanges();
             if (! $changes) {
@@ -233,6 +235,7 @@ class Repository implements RepositoryInterface
                 $tmp[$changedField] = $entityValues[$changedField];
             }
             $entityValues = $tmp;
+            $event->setChanges($changes);
         }
 
         $where = new Where\Equal(
@@ -253,8 +256,6 @@ class Repository implements RepositoryInterface
         $update->prepareStatement($this->adapter, $statement);
 
 
-        $event = new Event\EntityOperation($this, $entity);
-        $event->setChanges($changes);
 
         $this->eventManager->trigger('pre.update', $event);
         try {
@@ -353,9 +354,9 @@ class Repository implements RepositoryInterface
         $this->definition
             ->assertUpdatable()
         ;
-        $this->eventManager->dispatchEvent(Events::preDeleteAll, $eventArgs);
-        $aff = $this->adapter->delete($this->getTableName());
-        $this->eventManager->dispatchEvent(Events::postDeleteAll, $eventArgs);
+        $this->eventManager->trigger('pre.deleteAll');
+        $aff = $this->prepareStatement((new ZfSql\Delete()))->execute();
+        $this->eventManager->trigger('post.deleteAll');
         return $aff;
     }
 
@@ -689,9 +690,9 @@ class Repository implements RepositoryInterface
     public function getConventer()
     {
         return function ($expr, array $params = []) {
-            $e = new Expr($expr);
+            $e = new Expr($expr, $params);
             $e->setDefaultDefinition($this->getDefinition());
-            $e->setParam($params);
+            // $e->setParams($params);
             return (string) $e->render();
         };
     }
@@ -763,8 +764,7 @@ class Repository implements RepositoryInterface
             } elseif (null === $val) {
                 return new Where\Nul($fieldName);
             } elseif (is_array($val)) {
-                $where = new Where($fieldName);
-                $where->setParam($val);
+                $where = new Where($fieldName, $val);
                 return $where;
             } else {
                 return new Where\Equal($fieldName, $val);
@@ -795,7 +795,6 @@ class Repository implements RepositoryInterface
                     ExceptionTools::msg('argument where must be Rule\Where|Closure|array|string, given %s', $where)
                 );
         }
-        // dbgd($where);
         return function(Sql\Select $select) use ($where) {
             $where->setDefaultDefinition($this);
             $select->where(array($where));
