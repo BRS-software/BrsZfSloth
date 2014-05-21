@@ -13,7 +13,7 @@ abstract class SingleField extends Where
 
     public function __construct($field, $value = self::UNDEFINED)
     {
-        parent::__construct($this->getExpr($field), $this->getNegativeExpr($field));
+        parent::__construct($this->getExpr($field));//, $this->getNegativeExpr($field));
 
         if (self::UNDEFINED !== $value) {
             $this->setParam($field, $value);

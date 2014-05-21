@@ -162,6 +162,7 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(1, $repo->get(['nick' => 'tester1', 'isActive' => true])->id);
         $this->assertEquals(2, $repo->get(['nick' => 'tester2', 'isActive' => false])->id);
         $this->assertEquals(1, $repo->get(new Where("{nick}='tester1'"))->id);
+        $this->assertEquals(1, $repo->get(new Where("{nick}=:?", ["tester1"]))->id);
         $this->assertEquals(1, $repo->get(function(\Zend\Db\Sql\Select $select) {
             // $select->where("short_name='tester1'");
             $select->where(new Where("{nick}='tester1'"));

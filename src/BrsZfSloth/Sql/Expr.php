@@ -24,9 +24,12 @@ class Expr implements PredicateInterface
     protected $fields = array();
     protected $definitions = array();
 
-    public function __construct($expr)
+    public function __construct($expr, array $params = [])
     {
         $this->expr = (string) $expr;
+        if ($params) {
+            $this->setParams($params);
+        }
     }
 
     public function __toString()
@@ -96,17 +99,26 @@ class Expr implements PredicateInterface
         }
     }
 
+    public function setParams(array $params)
+    {
+        foreach ($params as $k => $v) {
+            $this->setParam($k, $v);
+        }
+        return $this;
+    }
+
+    public function getParams()
+    {
+        return $this->params;
+    }
+
     /**
      * @param string|array $name
      * @param mixed $value
      */
     public function setParam($name, $value = self::UNDEFINED)
     {
-        if (is_array($name)) {
-            foreach ($name as $k=>$v) {
-                $this->setParam($k, $v);
-            }
-        } elseif (!in_array((string) $name, $this->getParsedParams())) {
+        if (!in_array($name, $this->getParsedParams())) {
             throw new Exception\NotExistsException(sprintf('Param "%s" not exists in expression "%s"', $name, $this));
         } elseif (self::UNDEFINED === $value) {
             throw new Exception\InvalidArgumentException(sprintf('Value for param "%s" could not be undefined in expression "%s"', $name, $this));
@@ -116,15 +128,12 @@ class Expr implements PredicateInterface
         return $this;
     }
 
-    public function getParam($name = null)
+    public function getParam($name)
     {
-        if (null === $name) {
-            return $this->params;
-        } elseif (array_key_exists($name, $this->params)) {
+        if (array_key_exists($name, $this->params)) {
             return $this->params[$name];
-        } else {
-            throw new Exception\RuntimeException(sprintf('Param "%s" not set in expr %s', $name, $this));
         }
+        throw new Exception\RuntimeException(sprintf('Param "%s" not set in expr %s', $name, $this));
     }
 
     public function getParsedFields()
@@ -194,7 +203,7 @@ class Expr implements PredicateInterface
 
     public function render(array $params = array())
     {
-        $params = array_merge($this->getParam(), $params);
+        $params = array_merge($this->getParams(), $params);
 
         // createing replacments
         $replace = array();

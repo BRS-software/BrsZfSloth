@@ -165,19 +165,31 @@ class ExprTest extends \PHPUnit_Framework_TestCase
 
     public function testWithParamsAndDefinitions()
     {
-        $e = new Expr('fn({testField}) = fn(:field1,:param2::text)');
-        $e->setDefaultDefinition($this->definition);
-
-        $p = array(
+        $e = new Expr('fn({testField}) = fn(:field1,:param2::text)', [
             'field1' => 'assigned1',
-            'param2' => 'assigned2',
-        );
+            'param2' => 'assigned2'
+        ]);
+        $e->setDefaultDefinition($this->definition);
 
         $this->assertEquals(
             'fn(test_field) = fn(assigned1,assigned2::text)',
-            (string)$e->setParam($p)->render()
+            (string)$e->render()
+        );
+        $this->assertEquals(
+            'fn(test_field) = fn(reassigned1,assigned2::text)',
+            (string)$e->setParams(['field1' => 'reassigned1'])->render()
         );
     }
+
+    // public function testWithParamsAndDefinitions2()
+    // {
+    //     $e = new Expr("{testField} @> ':path' AND {testField}=:testField", ['path' => 'x', 'testField' => 'y']);
+    //     $e->setDefaultDefinition($this->definition);
+    //     $this->assertEquals(
+    //         "test_field @> 'x' AND test_field=y",
+    //         (string) $e->render()
+    //     );
+    // }
 
     /**
      * @expectedException BrsZfSloth\Exception\NotExistsException
