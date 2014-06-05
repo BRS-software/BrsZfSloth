@@ -444,6 +444,28 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
         );
     }
 
+    public function testUpdateFromNullValue()
+    {
+        $def = $this->getTestDefinition();
+        $def->getOptions()->setEntityClass('BrsZfSloth\Entity\Entity');
+        $def->setHydrator(new \BrsZfSloth\Hydrator\Hydrator);
+
+        $this->setupTestTable();
+        $this->insertTestData();
+        $repo = new Repository([
+            'dbAdapter' => $this->adapter,
+            'definition' => $def,
+        ]);
+
+        $entity = $repo->factoryEntity([
+            'nick' => 'xxx',
+            'comment' => null,
+        ])->save();
+
+        $entity->setComment('comment')->save();
+        $this->assertEquals($repo->get('id', $entity->getId())->getComment(), 'comment');
+    }
+
     /**
      * @dataProvider entityProvider
      */

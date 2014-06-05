@@ -504,6 +504,13 @@ class Definition implements
 
     public function addField(Field $field)
     {
+        foreach ($this as $f) {
+            if ($f->getMapping() === $field->getMapping()) {
+                throw new Exception\IncorrectDefinitionException(
+                    sprintf('Invalid mapping in field %s::%s to db field %s. Mapping already exists in the field %s::%s', $this->getName(), $field->getName(), $field->getMapping(), $this->getName(), $f->getName())
+                );
+            }
+        }
         $fName = $field->getName();
         $this[$fName] = $field;
         $this->mapping[$fName] = $field->getMapping();

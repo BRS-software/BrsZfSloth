@@ -306,6 +306,27 @@ class DefinitionTest extends \PHPUnit_Framework_TestCase
         $def->assertCollectionClass($this->getMock('ArrayAccess'));
     }
 
+    /**
+     * @expectedException BrsZfSloth\Exception\IncorrectDefinitionException
+     */
+    public function testDuplicateMapping()
+    {
+        $def = new Definition([
+            'name' => 'test',
+            'table' => 'test',
+            'fields' => [
+                'f1' => [
+                    'type' => 'integer',
+                    'mapping' => 'f_1'
+                ],
+                'f2' => [
+                    'type' => 'integer',
+                    'mapping' => 'f_1'
+                ],
+            ]
+        ]);
+    }
+
     public function testRemap()
     {
         $def = new Definition([
