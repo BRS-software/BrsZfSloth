@@ -30,11 +30,11 @@ class Assert
         return self::string($value, 0, $max);
     }
 
-    public static function string($value, $min = 0, $max = null, $errorMessage = 'value %s has an invalid length (%s-%s)')
+    public static function string($value, $min = 0, $max = null, $errorMessage = 'value %s has an invalid length (%s-%s) or is not a string')
     {
         if (! is_string($value)) {
             throw new AssertException(
-                sprintf('value %s is not a string', self::valueToString($value))
+                sprintf($errorMessage, self::valueToString($value))
             );
         }
         $length = strlen($value);
