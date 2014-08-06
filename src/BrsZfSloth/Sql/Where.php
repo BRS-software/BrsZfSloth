@@ -27,15 +27,15 @@ class Where extends Expr
     protected $positiveExpr;
     protected $negativeExpr;
 
-    public function __construct($expr, array $params = [])
+    public function __construct($expr, array $params = [], $defaultDefinition = null)
     {
         $this->positiveExpr = (string) $expr;
         $this->negativeExpr = sprintf('NOT (%s)', $expr);
-        parent::__construct($this->positiveExpr);
+        parent::__construct($this->positiveExpr, $params, $defaultDefinition);
 
-        if ($params) {
-            $this->setParams($params);
-        }
+        // if ($params) {
+        //     $this->setParams($params);
+        // }
     }
 
     // decides whether to add brackets during rendering as sub expression

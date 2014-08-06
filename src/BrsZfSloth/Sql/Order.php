@@ -89,15 +89,16 @@ class Order extends Expr {
 
     public function render(array $params = array())
     {
-        $coll[] = parent::render(array_merge($params, array(
+        $coll[] = (string) parent::render(array_merge($params, array(
             'direct' => new Expr(SORT_ASC===$this->getDirect() ? 'ASC' : 'DESC')
         )));
 
         foreach ($this->rules as $v) {
-            $coll[] = $v->render($params);
+            $coll = array_merge($coll, $v->render($params));
         }
-
-        return new Expr(implode(',', $coll));
+        // dbgd($coll);
+        // return new Expr(implode(',', $coll));
+        return $coll;
     }
 
     public function setDefaultDefinition($definition)

@@ -24,11 +24,14 @@ class Expr implements PredicateInterface
     protected $fields = array();
     protected $definitions = array();
 
-    public function __construct($expr, array $params = [])
+    public function __construct($expr, array $params = [], $defaultDefinition = null)
     {
         $this->expr = (string) $expr;
         if ($params) {
             $this->setParams($params);
+        }
+        if ($defaultDefinition) {
+            $this->setDefaultDefinition($defaultDefinition);
         }
     }
 
