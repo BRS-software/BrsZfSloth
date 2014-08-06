@@ -62,6 +62,11 @@ class Repository implements RepositoryInterface
         $this->adapter = $this->options->getDbAdapter();
         $this->eventManager = $this->options->getEventManager();
         $this->cache = Cache::factory($this);
+        $this->init();
+    }
+
+    protected function init()
+    {
     }
 
     public function __toString()
@@ -683,7 +688,8 @@ class Repository implements RepositoryInterface
                 $select->where(new Sql\Where\Equal($f->getName(), $f->getConstantValue()));
             }
         }
-
+        // $select->reset('columns');
+        // dbg($select->getSqlString($this->adapter->getPlatform()));
         return $select;
     }
 
