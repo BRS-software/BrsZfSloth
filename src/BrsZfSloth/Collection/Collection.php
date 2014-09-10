@@ -6,6 +6,7 @@ use Countable;
 use SeekableIterator;
 use ArrayAccess;
 use Serializable;
+use Closure;
 
 use BrsZfSloth\Exception;
 use BrsZfSloth\Exception\ExceptionTools;
@@ -205,6 +206,14 @@ class Collection implements
     {
         $this->__entities = array();
         $this->__totalCount = null;
+    }
+
+    public function each(Closure $fn)
+    {
+        foreach ($this as $i => $model) {
+            $fn($model, $i, $this);
+        }
+        return $this;
     }
 
     // public function save() {
