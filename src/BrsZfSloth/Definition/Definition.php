@@ -615,6 +615,7 @@ class Definition implements
             'entityClass' => $this->getOptions()->getEntityClass(),
             'collectionClass' => $this->getOptions()->getCollectionClass(),
             'hydratorClass' => $this->getOptions()->getHydratorClass(),
+            'uniqueKeys' => $this->getOptions()->getUniqueKeys(),
         ];
         foreach ($this->getOptions()->getDefaultOrder() as $f => $sort) {
             $export['defaultOrder'][$f] = SORT_ASC === $sort ? 'asc' : 'desc';

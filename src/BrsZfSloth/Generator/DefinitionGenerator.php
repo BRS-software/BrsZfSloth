@@ -62,6 +62,10 @@ class DefinitionGenerator
             ),
             'schema' => $tableSchema,
             'table' => $tableName,
+            'isTableUpdatable' => $this->askViaConsole(
+                true, // XXX recognize view and set false
+                function($console) use ($table) {}
+            ),
             'entityClass' => $this->askViaConsole(
                 'BrsZfSloth\Entity\Entity',
                 function($console) {}
@@ -78,6 +82,10 @@ class DefinitionGenerator
                 ['id' => SORT_ASC],
                 function($console) use ($table) {}
             ),
+            // 'uniqueKeys' => $this->askViaConsole( // XXX how to recodnize keys?
+            //     ['x'=>1],
+            //     function($console) use ($table) {}
+            // ),
         ];
         if (isset($table['fields'])) {
             $definitionConfig['fields'] = $table['fields'];
