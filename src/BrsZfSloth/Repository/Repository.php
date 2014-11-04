@@ -681,7 +681,7 @@ class Repository implements RepositoryInterface
             // ->where($where ? array($where) : array())
         ;
         if ($selectFn) {
-            $selectFn($select, $this->getConventer());
+            $selectFn($select, $this->getDefinition()->getConverter());
         }
         if ($def->hasConstantValuesFields()) {
             foreach ($def->getConstantValuesFields() as $f) {
@@ -691,16 +691,6 @@ class Repository implements RepositoryInterface
         // $select->reset('columns');
         // dbg($select->getSqlString($this->adapter->getPlatform()));
         return $select;
-    }
-
-    public function getConventer()
-    {
-        return function ($expr, array $params = []) {
-            $e = new Expr($expr, $params);
-            $e->setDefaultDefinition($this->getDefinition());
-            // $e->setParams($params);
-            return (string) $e->render();
-        };
     }
 
     // public function getCacheId(/*[arg1, argN]*/)

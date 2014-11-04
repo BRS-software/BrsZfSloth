@@ -95,7 +95,7 @@ trait TreeTrait
         ;
 
         if (null !== $deleteFn) {
-            $deleteFn($delete, $this->getConventer());
+            $deleteFn($delete, $this->getDefinition()->getConverter());
         }
 
         return $this->prepareStatement($delete)->execute();

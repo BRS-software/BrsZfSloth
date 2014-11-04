@@ -20,6 +20,7 @@ use BrsZfSloth\Exception\ExceptionTools;
 use BrsZfSloth\Sloth;
 use BrsZfSloth\Sql\Order;
 use BrsZfSloth\Hydrator\Hydrator;
+use BrsZfSloth\Sql\Expr;
 
 class Definition implements
     Countable,
@@ -339,6 +340,16 @@ class Definition implements
     public function getDefaultOrder()
     {
         return $this->defaultOrder;
+    }
+
+    public function getConverter()
+    {
+        return function ($expr, array $params = []) {
+            $e = new Expr($expr, $params);
+            $e->setDefaultDefinition($this);
+            // $e->setParams($params);
+            return (string) $e->render();
+        };
     }
 
     // TODO UT
