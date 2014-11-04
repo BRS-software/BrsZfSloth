@@ -1,10 +1,22 @@
 <?php
+
+/**
+ * (c) BRS software - Tomasz Borys <t.borys@brs-software.pl>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace BrsZfSloth\Repository;
 
+use Closure;
 use BrsZfSloth\Definition\DefinitionAwareInterface;
 use BrsZfSloth\Sql\Where;
 use BrsZfSloth\Sql\Expr;
 
+/**
+ * @author Tomasz Borys <t.borys@brs-software.pl>
+ */
 interface RepositoryInterface extends DefinitionAwareInterface
 {
     /**
@@ -34,9 +46,10 @@ interface RepositoryInterface extends DefinitionAwareInterface
     public function deleteAll();
 
     /**
+     * @param $where Where, Select or selectFn
      * @return integer
      */
-    public function count(Where $where = null);
+    public function count($where = null);
 
     public function getDsn();
     public function getByUnique($uniqueKeyName, array $conditions);

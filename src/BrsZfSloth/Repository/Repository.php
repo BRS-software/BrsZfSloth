@@ -368,7 +368,9 @@ class Repository implements RepositoryInterface
     public function prepareStatement(ZfSql\PreparableSqlInterface $sql)
     {
         $statement = $this->adapter->createStatement();
-        if ($sql instanceof ZfSql\Update) {
+        if ($sql instanceof ZfSql\Select) {
+            $sql->from($this->definition->getTable());
+        } elseif ($sql instanceof ZfSql\Update) {
             $sql->table($this->definition->getTable());
         } elseif ($sql instanceof ZfSql\Insert) {
             $sql->into($this->definition->getTable());
@@ -379,10 +381,33 @@ class Repository implements RepositoryInterface
         return $statement;
     }
 
-    public function count(Where $where = null)
+    public function count($where = null)
     {
+        if ($where instanceof Closure || null === $where) {
+            $where = $this->getSelect(function ($select, $c) use ($where) {
+                if (null !== $where) {
+                    $where($select, $c);
+                }
+            });
+        }
 
-        return $this->_count($where);
+        if ($where instanceof \Zend\Db\Sql\Select) {
+            $where = $where->where;
+        } elseif (! $where instanceof \Zend\Db\Sql\Where) {
+            throw new Exception\InvalidArgumentException('Argument must be a selectFn or \Zend\Db\Sql\Select or \Zend\Db\Sql\Where');
+        }
+
+        $sql = new \Zend\Db\Sql\Sql($this->getAdapter());
+        $select = $sql->select();
+        $select
+            ->columns(['count' => new \Zend\Db\Sql\Expression('COUNT(1)')], false)
+            ->where($where)
+        ;
+
+        $statement = $this->prepareStatement($select);
+        $result = $statement->execute();
+
+        return $result->current()['count'];
     }
 
     public function getNextId()
