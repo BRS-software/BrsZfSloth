@@ -45,62 +45,9 @@ EOF;
         $slothOptions = $this->getOptions();
         $slothOptions['default_db_adapter'] = $sm->get($this->getOption('default_db_adapter'));
         $slothOptions['default_service_manager'] = $sm;
-        // dbgd($slothOptions['definition_generator_ignored_db_tables']);
 
         Sloth::configure(
             (new SlothOptions($slothOptions))
-                // ->setDefinitionCaching(true) // XXX is_production
-        );
-    }
-
-    // public function bootstrap(ModuleManager $moduleManager, ApplicationInterface $app)
-    // {
-    //     debuge(new Sloth);
-
-    //     $sm      = $app->getServiceManager();
-    //     $options = $sm->get('BrsZfSloth_module_options');
-
-    //     // debuge($this->getMergedConfig());
-    //     // debuge($this->getOption('sloth_lib_path'));
-    //     // debuge($options->sloth_lib_path);
-
-
-    //     // Sloth lib autoloader
-    //     AutoloaderFactory::factory(array(
-    //         'Zend\Loader\ClassMapAutoloader' => array(
-    //             $options->sloth_lib_path . '/autoload_classmap.php',
-    //         ),
-    //         'Zend\Loader\StandardAutoloader' => array(
-    //             'namespaces' => array(
-    //                 'Sloth' => $options->sloth_lib_path . '/src/Sloth'
-    //             ),
-    //         ),
-    //     ));
-
-    //     // Sloth lib configuration
-    //     Sloth::configure($options->getSlothOptions()
-    //         ->setCaching(is_production())
-    //         ->setEventManager($app->getEventManager())
-    //         ->setDbAdapter($sm->get('Zend\Db\Adapter\Adapter'))
-    //     );
-    // }
-
-    public function getServiceConfig()
-    {
-        return array(
-            // 'factories' => array(
-            //     'BrsZfSloth_options' => function ($sm) {
-            //         //$config = $sm->get('Config');
-            //         // dbgd($this->getOptions());
-            //         return new Options\ModuleOptions($this->getOptions());
-            //     },
-            //     // 'db-adapter' => function($sm) {
-            //     //     $config = $sm->get('config');
-            //     //     $config = $config['db'];
-            //     //     $dbAdapter = new DbAdapter($config);
-            //     //     return $dbAdapter;
-            //     // },
-            // ),
         );
     }
 }
