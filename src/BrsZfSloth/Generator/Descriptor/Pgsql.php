@@ -20,6 +20,7 @@ class Pgsql extends AbstractDescriptor
         'boolean' => Field::TYPE_BOOLEAN,
         'text' => Field::TYPE_TEXT,
         'array' => Field::TYPE_ARRAY,
+        'json' => Field::TYPE_JSON,
         'smallint' => Field::TYPE_SMALLINT,
         'numeric' => Field::TYPE_NUMERIC,
         'user-defined' => Field::TYPE_CHARACTER_VARYING,
