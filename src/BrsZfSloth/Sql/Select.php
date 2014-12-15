@@ -3,6 +3,9 @@ namespace BrsZfSloth\Sql;
 
 use Zend\Db\Sql\Select as ZfSelect;
 use Zend\Db\Sql\Predicate;
+use Zend\Db\Adapter\AdapterInterface;
+use Zend\Db\Adapter\StatementContainerInterface;
+use Zend\Db\Adapter\Platform\PlatformInterface;
 
 use BrsZfSloth\Exception;
 use BrsZfSloth\Exception\ExceptionTools;
@@ -12,6 +15,7 @@ use BrsZfSloth\Definition\DefinitionAwareInterface;
 class Select extends ZfSelect implements DefinitionAwareInterface
 {
     protected $definition;
+    protected $forUpdate = false;
 
     /**
      * Create where clause
@@ -77,5 +81,32 @@ class Select extends ZfSelect implements DefinitionAwareInterface
         // dbgd($definition->getDefaultOrder());
         $this->order($definition->getDefaultOrder());
         return $this;
+    }
+
+    public function forUpdate($flag = true)
+    {
+        $this->forUpdate = (bool) $flag;
+        return $this;
+    }
+
+    /**
+     * Hack for posibility add "for update" to select
+     * @see http://qiita.com/sasezakit/items/515c966728160ea6c7a8
+     */
+    public function prepareStatement(AdapterInterface $adapter, StatementContainerInterface $statementContainer)
+    {
+        parent::prepareStatement($adapter, $statementContainer);
+        if ($this->forUpdate) {
+            $statementContainer->setSql($statementContainer->getSql() . ' FOR UPDATE');
+        }
+    }
+
+    public function getSqlString(PlatformInterface $adapterPlatform = null)
+    {
+        $sql = parent::getSqlString($adapterPlatform);
+        if ($this->forUpdate) {
+            $sql .= ' FOR UPDATE';
+        }
+        return $sql;
     }
  }
