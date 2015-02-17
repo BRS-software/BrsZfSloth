@@ -36,27 +36,8 @@ class Collection implements
         }
     }
 
-    // public function __sleep()
-    // {
-    //     return array(
-    //         '__allowedEntityClass',
-    //         '__entities',
-    //         '__totalCount',
-    //     );
-    // }
-
-    // public function __wakeup()
-    // {
-    //     mprd('wakeup');
-    //     $this->connect();
-    // }
-
     public function serialize()
     {
-        // $this->__repository = null;
-        // $this->__definition = null;
-        // die(serialize($this->__entities));
-        // mprd(serialize($this));
         return serialize([
             '__entities' => $this->__entities,
             '__allowedEntityClass' => $this->__allowedEntityClass,
@@ -130,8 +111,12 @@ class Collection implements
     public function toArray($mapModelsToArray = false)
     {
         if ($mapModelsToArray) {
-            return array_map(function ($v) {
-                return $v->toArray();
+            return array_map(function ($v) use ($mapModelsToArray) {
+                if ($mapModelsToArray instanceof Closure) {
+                    return $mapModelsToArray($v);
+                } else {
+                    return $v->toArray();
+                }
             }, $this->__entities);
         } else {
             return $this->__entities;
@@ -168,15 +153,6 @@ class Collection implements
         }
         return $this->__totalCount;
     }
-
-    // public function arrayValues($field)
-    // {
-    //     $array = [];
-    //     foreach ($this as $model) {
-    //         $array[] = $model->$field; // XXX I think it should use hydrator
-    //     }
-    //     return $array;
-    // }
 
     public function getFirst()
     {
@@ -216,63 +192,11 @@ class Collection implements
         return $this;
     }
 
-    // public function save() {
-    //     foreach ($this as $model) {
-    //         $model->save();
-    //     }
-    //     return $this;
-    // }
-
-    // public function find($field, $value) {
-    //     $called = get_called_class();
-    //     $find = new $called;
-    //     foreach ($this as $entity)
-    //         if ($entity->$field === $value)
-    //             $find[] = $entity;
-
-    //     return $find;
-    // }
-
-    // public function delete() {
-    //     array_walk_closure($this, function($item, $key) {
-    //             return $item->delete();
-    //         });
-    //     $this->clear();
-    //     return $this;
-    // }
-
-
-    // /**
-    //  * Wykonuje dumpa obiektu. Ma możliwość rekurencyjnego wywoływania toArray()
-    //  * na relacjach oraz posiada zabezpieczenie przez zapętlaniem się relacji.
-    //  *
-    //  * @param   integer $depth Poziom zagłębiania się w relacje
-    //  * @param   array $callStack Stos wywołań
-    //  * @return  array
-    //  */
-    // public function dump($depth = 1, array $callStack = array()) {
-    //     $reqursion = true;
-
-    //     $callStack[] = get_class($this);
-    //     // zabezpieczenie przed requrencją jest w modelach, tu raczej nie ma
-    //     // takiej potrzeby
-    //     // sprawdzenie głębokości rozwijania
-    //     if ((int) $depth < count($callStack))
-    //         $reqursion = false;
-
-    //     $result = array();
-    //     foreach ($this as $k => $entity) {
-    //         $value = $entity;
-    //         if ($reqursion && is_object($value)) {
-    //             if (method_exists($entity, 'dump'))
-    //                 $value = $entity->dump($depth, $callStack);
-    //             elseif (method_exists($entity, 'toArray'))
-    //                 $value = $entity->toArray();
-    //         }
-    //         $result[$k] = $value;
-    //     }
-    //     return $result;
-    // }
+    public function reverse()
+    {
+        $this->__entities = array_reverse($this->__entities);
+        return $this;
+    }
 
     /**
      * @see    Countable::count()
