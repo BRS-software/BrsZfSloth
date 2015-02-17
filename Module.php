@@ -8,6 +8,8 @@ use Zend\Mvc\ApplicationInterface;
 use Zend\Loader\AutoloaderFactory;
 use Zend\ModuleManager\Feature\ConsoleBannerProviderInterface;
 use Zend\Console\Adapter\AdapterInterface as Console;
+use Zend\Mvc\MvcEvent;
+use Zend\EventManager\EventInterface as Event;
 
 use BrsZfBase\Module\AbstractModule;
 use BrsZfSloth\Sloth;
@@ -39,12 +41,11 @@ EOF;
         return __NAMESPACE__;
     }
 
-    public function bootstrap(ModuleManager $moduleManager, ApplicationInterface $app)
+    public function modulesLoaded(Event $e)
     {
-        $sm = $app->getServiceManager();
         $slothOptions = $this->getOptions();
-        $slothOptions['default_db_adapter'] = $sm->get($this->getOption('default_db_adapter'));
-        $slothOptions['default_service_manager'] = $sm;
+        $slothOptions['default_db_adapter'] = $this->serviceManager->get($this->getOption('default_db_adapter'));
+        $slothOptions['default_service_manager'] = $this->serviceManager;
 
         Sloth::configure(
             (new SlothOptions($slothOptions))
