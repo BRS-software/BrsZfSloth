@@ -17,17 +17,17 @@ use Closure;
  */
 trait NodeCollectionTrait
 {
-    public function toArrayTree(Closure $dataFn, $currDepth = 1, &$__lastItem = 0)
+    public function toArrayTree(Closure $dataFn, $currDepth = 1, $key = 'children', &$__lastItem = 0)
     {
         $tree = [];
         for ($i = &$__lastItem; $i < count($this); $i++) {
             $nl = $this[$i]->getNLevel();
             $item = $dataFn($this[$i]);
-            $item['children'] = [];
+            $item[$key] = [];
             if ($nl === $currDepth + 1) {
                 $tree[] = $item;
             } elseif ($nl === $currDepth + 2) {
-                $tree[max(array_keys($tree))]['children'] = $this->toArrayTree($dataFn, $currDepth + 1, $i);
+                $tree[max(array_keys($tree))][$key] = $this->toArrayTree($dataFn, $currDepth + 1, $key, $i);
             } elseif ($nl > $currDepth + 2) {
                 throw new \LogicException('invalid tree struct for item ');
             } else {
