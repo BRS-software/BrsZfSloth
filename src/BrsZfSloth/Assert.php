@@ -34,7 +34,7 @@ class Assert
     {
         if (! is_string($value)) {
             throw new AssertException(
-                sprintf($errorMessage, self::valueToString($value))
+                sprintf('value %s is not a string', self::valueToString($value))
             );
         }
         $length = strlen($value);
