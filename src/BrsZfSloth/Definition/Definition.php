@@ -511,7 +511,10 @@ class Definition implements
     //     }
     // }
 
-
+    public function hasMappedField($mappingField)
+    {
+        return in_array($mappingField, $this->getMapping());
+    }
 
     public function addField(Field $field)
     {
@@ -563,7 +566,7 @@ class Definition implements
     {
         if (null === $this->primary) {
             throw new Exception\NotFoundException(
-                sprintf('Entity %s not include primary key', $this->entityClass)
+                sprintf('Entity %s not include primary key', $this->getOptions()->getEntityClass())
             );
         }
         return $this->getField($this->primary);
