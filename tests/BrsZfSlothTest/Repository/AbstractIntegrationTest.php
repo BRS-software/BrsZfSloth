@@ -55,9 +55,9 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
     }
 
     // static because used in data provider
-    protected function getTestDefinition()
+    protected function getTestDefinition(array $options = [])
     {
-        return new Definition([
+        return new Definition(array_merge([
             'name' => 'users',
             'schema' => 'public',
             'table' => $this->testTableName,
@@ -86,7 +86,7 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
                 ],
                 'comment' => 'text',
             ]
-        ]);
+        ], $options));
     }
 
     public static function entityProvider()
@@ -442,6 +442,64 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
                 $def
             )
         );
+    }
+
+    public function testUpdateWithPreUpdateEvent()
+    {
+        $def = $this->getTestDefinition([
+            'hydratorClass' => 'BrsZfSloth\Hydrator\Hydrator',
+            'entityClass' => 'BrsZfSloth\Entity\Entity',
+        ]);
+
+        $this->setupTestTable();
+        $this->insertTestData();
+
+        $repo = new Repository([
+            'dbAdapter' => $this->adapter,
+            'definition' => $def,
+        ]);
+
+        $repo->getEventManager()->attach('pre.update', function ($e) {
+            // $changes = $e->getChanges();
+            $e->getParam('entity')->setComment('set-in-pre-update-event');
+        });
+
+        $repo->get('nick', 'tester1')
+            ->setIsActive(false) // trigger pre.update event
+            ->save()
+        ;
+
+        $entity = $repo->get('nick', 'tester1');
+        $this->assertEquals('set-in-pre-update-event', $entity->getComment());
+        $this->assertFalse($entity->getIsActive());
+    }
+
+    public function testUpdateToNullValue()
+    {
+        $def = $this->getTestDefinition([
+            'hydratorClass' => 'BrsZfSloth\Hydrator\Hydrator',
+            'entityClass' => 'BrsZfSloth\Entity\Entity',
+        ]);
+
+        $this->setupTestTable();
+        $this->insertTestData();
+
+        $repo = new Repository([
+            'dbAdapter' => $this->adapter,
+            'definition' => $def,
+        ]);
+
+        $e = $repo->get('nick', 'tester1')
+            ->setComment('xxx')
+            ->setComment(null)
+            ->save()
+        ;
+
+        dbgd($e->getComment());
+
+        $entity = $repo->get('nick', 'tester1');
+        $this->assertEquals('set-in-pre-update-event', $entity->getComment());
+        $this->assertFalse($entity->getIsActive());
     }
 
     public function testUpdateFromNullValue()

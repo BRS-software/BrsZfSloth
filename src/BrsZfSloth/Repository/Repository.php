@@ -224,7 +224,6 @@ class Repository implements RepositoryInterface
         ;
         $this->applyAwareElements($entity);
         EntityTools::validate($entity, $this->getDefinition());
-        $entityValues = EntityTools::toRepository($entity, $this->getDefinition());
 
         $event = new Event\EntityOperation($this, $entity);
 
@@ -233,15 +232,26 @@ class Repository implements RepositoryInterface
             if (! $changes) {
                 return 0; // zero affected
             }
+            $event->setChanges($changes);
+            $this->eventManager->trigger('pre.update', $event);
+
             // remove not changed values from update
+            $entityValues = EntityTools::toRepository($entity, $this->getDefinition());
+            // dbgd($entityValues);
             $tmp = [];
-            foreach ($changes as $fieldName => $v) {
+            // second call $entity->getChanges() because entity may be changed in the event
+            foreach ($entity->getChanges() as $fieldName => $v) {
                 $changedField = $this->definition->getField($fieldName)->getMapping();
                 $tmp[$changedField] = $entityValues[$changedField];
             }
             $entityValues = $tmp;
-            $event->setChanges($changes);
+
+        } else {
+            $this->eventManager->trigger('pre.update', $event);
+            $entityValues = EntityTools::toRepository($entity, $this->getDefinition());
         }
+
+        // dbgd($entityValues);
 
         $where = new Where\Equal(
             $this->definition->getPrimary(),
@@ -262,7 +272,6 @@ class Repository implements RepositoryInterface
 
 
 
-        $this->eventManager->trigger('pre.update', $event);
         try {
             $affected = $statement->execute()->getAffectedRows();
 
