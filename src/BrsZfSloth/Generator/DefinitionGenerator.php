@@ -177,7 +177,7 @@ class DefinitionGenerator
         // if not force rebuild fileds, it will only add new fields to existing config
         } else {
             foreach ($newDefinition as $newField) {
-                if (! $oldDefinition->hasField($newField->getName())) {
+                if (! $oldDefinition->hasMappedField($newField->getMapping())) {
                     $oldDefinition->addField($newField);
                 }
             }
