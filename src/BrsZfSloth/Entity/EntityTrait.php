@@ -216,4 +216,18 @@ trait EntityTrait
         $this->getRepository()->delete($this);
         return $this;
     }
+
+    public function fetch()
+    {
+        $this->getRepository()->populate($this);
+        return $this;
+        // $id = $this->getId();
+        // if (empty($id)) {
+        //     throw new Exception\RuntimeException(
+        //         'id of model is required'
+        //     );
+        // }
+        // $repo = $this->getRepository();
+        // dbgd($repo->rawByMethod('selectCacheable', ));
+    }
 }

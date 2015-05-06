@@ -426,6 +426,20 @@ class Repository implements RepositoryInterface
         return $statement->execute()->next()['nextval'];
     }
 
+    public function populate($entity)
+    {
+        $primaryField = $this->definition->getPrimary()->getName();
+        $raw = $this->rawByMethod(
+            'selectCacheable',
+            $this->getWhereFn(
+                $primaryField,
+                EntityTools::getValue($primaryField, $entity, $this->definition)
+            )
+        );
+        EntityTools::populate($this->getDataForSingleRowFromRaw($raw), $entity, $this->getDefinition());
+        return $this;
+    }
+
     /**
      * @see RepositoryTest::testGet()
      */
@@ -451,7 +465,7 @@ class Repository implements RepositoryInterface
         );
     }
 
-    public function getByMethod($method/*[$arg1, $argN]*/)
+    public function rawByMethod($method/*[$arg1, $argN]*/)
     {
         if (! method_exists($this, $method)) {
             throw new Exception\BadMethodCallException(
@@ -466,34 +480,33 @@ class Repository implements RepositoryInterface
         $data = call_user_func_array(array($this, $method), $args);
 
         $cacheId = false;
-        $exceptionQuery = '';
+        $query = null;
+
         if ($data instanceof CacheableResult) {
             $cacheId = $data->getCacheId();
-            // debuge($cacheId);
+            $query = $data->getExceptionQuery();
+
             if ($this->cache->getstorage()->hasItem($cacheId)) {
-                // debuge($this->cache->getstorage()->getItem($cacheId), $cacheId);
-                return unserialize($this->cache->getstorage()->getItem($cacheId));
+                $data = unserialize($this->cache->getstorage()->getItem($cacheId));
+            } else {
+                $data = $data();
+                $this->cache->getStorage()->setItem($cacheId, serialize($data));
             }
-            $exceptionQuery = sprintf(' [%s]', $data->getExceptionQuery());
-            $data = $data();
         }
 
+        return [
+            'query' => $query,
+            'data' => $data,
+        ];
+    }
+
+    public function getByMethod($method/*[$arg1, $argN]*/)
+    {
+        $raw = call_user_func_array([$this, 'rawByMethod'], func_get_args());
+        $data = $raw['data'];
+
         if (is_array($data)) {
-            if (1 !== count($data)) {
-                // not found
-                if (empty($data)) {
-                    // debuge($q);
-                    throw new Exception\NotFoundException(
-                        ExceptionTools::msg('record not found in repository %s(%s) %s', get_class($this), $this->getDsn(), $exceptionQuery)
-                    );
-                // ambigous
-                } else {
-                    throw new Exception\AmbiguousException(
-                        ExceptionTools::msg('ambiguous in repository %s(%s) %s', get_class($this), $this->getDsn(), $exceptionQuery)
-                    );
-                }
-            }
-            $data = $this->createEntity($data[0]); // here is the certainty, that the entity class is correct
+            $data = $this->createEntity($this->getDataForSingleRowFromRaw($raw)); // here is the certainty, that the entity class is correct
         } else {
             $entityClass = $this->getDefinition()->getOptions()->getEntityClass();
             if (! $data instanceof $entityClass) {
@@ -505,36 +518,32 @@ class Repository implements RepositoryInterface
                 );
             }
         }
-        if ($cacheId) {
-            $this->cache->getStorage()->setItem($cacheId, serialize($data));
-        }
         return $data;
+    }
+
+    protected function getDataForSingleRowFromRaw(array $raw)
+    {
+        $data = $raw['data'];
+        if (1 !== count($data)) {
+            // not found
+            if (empty($data)) {
+                throw new Exception\NotFoundException(
+                    ExceptionTools::msg('record not found in repository %s(%s) [%s]', get_class($this), $this->getDsn(), $raw['query'])
+                );
+            // ambigous
+            } else {
+                throw new Exception\AmbiguousException(
+                    ExceptionTools::msg('ambiguous in repository %s(%s) [%s]', get_class($this), $this->getDsn(), $raw['query'])
+                );
+            }
+        }
+        return $raw['data'][0];
     }
 
     public function fetchByMethod($method/*[,$arg1, $argN]*/)
     {
-        if (! method_exists($this, $method)) {
-            throw new Exception\BadMethodCallException(
-                ExceptionTools::msg('method %s::%s() does not exist', get_class($this), $method)
-            );
-        }
-
-        $args = func_get_args();
-        array_shift($args);
-
-        // call work method
-        $data = call_user_func_array(array($this, $method), $args);
-
-        $cacheId = false;
-        $exceptionQuery = '';
-        if ($data instanceof CacheableResult) {
-            $cacheId = $data->getCacheId();
-            if ($this->cache->getstorage()->hasItem($cacheId)) {
-                return $this->cache->getstorage()->getItem($cacheId);
-            }
-            $exceptionQuery = sprintf(' [%s]', $data->getExceptionQuery());
-            $data = $data(); // here is query to storage (maybe via adapter)
-        }
+        $raw = call_user_func_array([$this, 'rawByMethod'], func_get_args());
+        $data = $raw['data'];
 
         if (is_array($data)) {
             $data = $this->createCollection($data);
@@ -548,10 +557,6 @@ class Repository implements RepositoryInterface
                     )
                 );
             }
-        }
-        // mprd($data);
-        if ($cacheId) {
-            $this->cache->getstorage()->setItem($cacheId, $data);
         }
         return $data;
     }

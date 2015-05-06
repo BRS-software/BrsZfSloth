@@ -495,11 +495,8 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
             ->save()
         ;
 
-        dbgd($e->getComment());
-
         $entity = $repo->get('nick', 'tester1');
-        $this->assertEquals('set-in-pre-update-event', $entity->getComment());
-        $this->assertFalse($entity->getIsActive());
+        $this->assertNull($entity->getComment());
     }
 
     public function testUpdateFromNullValue()
@@ -549,7 +546,28 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
         $repo->delete($entity);
 
         $this->assertEquals(2, $repo->fetch()->count());
+    }
 
+
+    public function testFetchEntity()
+    {
+        $def = $this->getTestDefinition([
+            'hydratorClass' => 'BrsZfSloth\Hydrator\Hydrator',
+            'entityClass' => 'BrsZfSloth\Entity\Entity',
+        ]);
+
+        $this->setupTestTable();
+        $this->insertTestData();
+
+        $repo = new Repository([
+            'dbAdapter' => $this->adapter,
+            'definition' => $def,
+        ]);
+
+        $e = $repo->factoryEntity(['id' => 2]);
+        $e->fetch();
+        // dbgd($e->toArray());
+        $this->assertEquals($e->getnick(), 'tester2');
     }
 
     /**
