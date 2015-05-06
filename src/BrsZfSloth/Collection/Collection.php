@@ -299,7 +299,7 @@ class Collection implements
     {
         if (! $entity instanceof $this->__allowedEntityClass) {
             throw new Exception\DomainException(
-                sprintf('Entity is no instance of %s, %s given', $this->__allowedEntityClass, get_class($entity))
+                sprintf('Entity is no instance of %s, %s given', $this->__allowedEntityClass, is_object($entity) ? get_class($entity) : gettype($entity))
             );
         }
         if ($offset === null) {
