@@ -146,6 +146,12 @@ class Assert
     {
         // XXX remove microtime
         $value = explode('.', $value)[0];
+
+        // convert 2015-05-18 11:25:01+02 to 2015-05-18 11:25:01+0200 because "O" that +0200
+        if (substr($format, -1) === "O" && preg_match('/.*\+\d\d$/', $value)) {
+            $value = $value . '00';
+        }
+
         $format = str_replace('.u', '', $format);
 
         $time = strtotime($value);
