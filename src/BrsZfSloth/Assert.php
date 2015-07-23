@@ -258,13 +258,20 @@ class Assert
         return $value;
     }
 
-    public static function some($value, array $keys, $message = 'All keys %s are empty in %s')
+    /**
+     * Usage:
+     *  ::any(['x' => 1, 'y' => '2'], ['y', 'z']) => pass the test
+     *  ::any(['x' => 1, 'y' => '2'], ['z']) => not pass the test
+     *  ::any(['x' => 1, 'y' => '2', 'y2' => 3], ['z', ['y', 'y2']]) => pass the test
+     *  ::any(['x' => 1, 'y' => '2'], ['z', ['y', 'y2']]) => not pass the test
+     */
+    public static function any($value, array $keys, $message = 'All keys %s are empty in %s')
     {
         self::arra($value);
         foreach ($keys as $k) {
             if (is_array($k)) {
                 try {
-                    self::any($value, $k);
+                    self::every($value, $k);
                     return $value;
                 } catch (AssertException $e) {
                 }
@@ -275,7 +282,7 @@ class Assert
         throw new AssertException(sprintf($message, self::valueToString($keys), self::valueToString($value)));
     }
 
-    public static function any($value, array $keys, $message = 'Not all keys (%s) are set in %s')
+    public static function every($value, array $keys, $message = 'Not all keys (%s) are set in %s')
     {
         self::arra($value);
         foreach ($keys as $k) {
