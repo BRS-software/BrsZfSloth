@@ -18,7 +18,8 @@
         "underscore/Underscore.php": "dev-master",
         "zendframework/zendframework": "2.*",
         "brs-software/brs-zf-base": "@dev",
-        "brs-software/brs-zf": "@dev"
+        "brs-software/brs-zf": "@dev",
+        "brs-software/stdlib": "1.*"
     },
     "require-dev": {
         "phpunit/PHPUnit": "3.7.*"
