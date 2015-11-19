@@ -32,6 +32,10 @@ class Json implements StrategyInterface
         if (is_array($value)) {
             return $value; // XXX test why in this place not always is string?
         }
-        return json_decode($value, true);
+        $result = json_decode($value, true);
+        if (null === $result && is_string($value)) {
+            $result = json_decode('"' . $value . '"', true);
+        }
+        return $result;
     }
 }
