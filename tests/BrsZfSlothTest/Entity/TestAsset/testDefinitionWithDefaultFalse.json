@@ -1,0 +1,15 @@
+{
+    "name": "testDefinitionWithDefaultFalse",
+    "table": "testtable",
+    "fields": [
+        {
+            "name": "id",
+            "type": "integer"
+        },
+        {
+            "name": "flag",
+            "type": "boolean",
+            "default": false
+        }
+    ]
+}

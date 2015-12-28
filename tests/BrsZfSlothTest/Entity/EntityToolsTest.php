@@ -22,16 +22,23 @@ class EntityToolsTest extends \PHPUnit_Framework_TestCase
         Definition::reset();
     }
 
-    /*
-     * @expectedException BrsZfSloth\Exception\DefinitionConfigNotFoundException
-     * @expectedExceptionMessage definition config not found for name "givenDefinitionName" (paths: )
-     */
-    // public function testDefinitionPrior()
+    // public function testToArrayWhenDefaultFalseSetToNull()
     // {
-    //     EntityTools::getDefinition(
-    //         $this->getMock('BrsZfSloth\Definition\DefinitionAwareInterface'),
-    //         'givenDefinitionName'
-    //     );
+    //     Sloth::getOptions()->addDefinitionsPath(__DIR__ . '/TestAsset');
+    //     $definition = Definition::getCachedInstance('testDefinitionWithDefaultFalse');
+
+    //     $entity = (new TestAsset\TestEntitySloth)
+    //         ->setDefinition($definition)
+    //         ->populate([
+    //             'id' => 1,
+    //         ])
+    //     ;
+    //     $entity->setFlag(null);
+    //     $array = EntityTools::toArray($entity);
+
+    //     $this->assertNull($entity->getFlag());
+    //     dbgd($array);
+    //     // $this->assertNull($array['flag']);
     // }
 
     public function testDiff()
@@ -64,16 +71,16 @@ class EntityToolsTest extends \PHPUnit_Framework_TestCase
 
         return [
             // Sloth entity with sloth hydrator
-            [
-                $def,
-                new \BrsZfSloth\Hydrator\Hydrator,
-                (new TestAsset\TestEntitySloth)
-                    ->setDefinition($def)
-                    ->setId(1)
-                    ->setIsActive(false)
-                    ->setFirstName('x')
-                    ->setOutsideDefinition('y')
-            ],
+            // [
+            //     $def,
+            //     new \BrsZfSloth\Hydrator\Hydrator,
+            //     (new TestAsset\TestEntitySloth)
+            //         ->setDefinition($def)
+            //         ->setId(1)
+            //         ->setIsActive(false)
+            //         ->setFirstName('x')
+            //         ->setOutsideDefinition('y')
+            // ],
             // Sloth entity with staandard methods hydrator - it does not work because set/getRepository is causes fail
             // [
             //     $def,
@@ -95,16 +102,16 @@ class EntityToolsTest extends \PHPUnit_Framework_TestCase
                     ->setOutsideDefinition('y')
             ],
             // StdClass entity with properties
-            [
-                $def,
-                new \Zend\Stdlib\Hydrator\ObjectProperty,
-                (object) [
-                    'id' => 1,
-                    'isActive' => false,
-                    'firstName' => 'x',
-                    'undefinedInDefinition' => 'y',
-                ]
-            ],
+            // [
+            //     $def,
+            //     new \Zend\Stdlib\Hydrator\ObjectProperty,
+            //     (object) [
+            //         'id' => 1,
+            //         'isActive' => false,
+            //         'firstName' => 'x',
+            //         'undefinedInDefinition' => 'y',
+            //     ]
+            // ],
         ];
     }
 
@@ -299,5 +306,4 @@ class EntityToolsTest extends \PHPUnit_Framework_TestCase
         EntityTools::validate($entity, $def);
         mprd(9);
     }
-
 }

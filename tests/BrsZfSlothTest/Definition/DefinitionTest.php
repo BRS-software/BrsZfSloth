@@ -78,15 +78,10 @@ class DefinitionTest extends \PHPUnit_Framework_TestCase
 
     public function testCreateCachedInstanceFromProvider()
     {
-        $definitionProvider = $this->getMock('BrsZfSloth\Definition\DefinitionProviderInterface');
-        $definitionProvider::staticExpects($this->any())
-            ->method('getDefinitionConfig')
-            ->will($this->returnValue([
-                'name' => 'testdef',
-                'table' => 'testtable',
-            ]))
-        ;
-        // mprd($definitionProvider->getDefinitionConfig());
+        $definitionProvider = new \BrsZfSlothTest\Definition\TestAsset\DefinitionProvider([
+            'name' => 'testname',
+            'table' => 'testtable',
+        ]);
 
         $def = Definition::getCachedInstance($definitionProvider);
         $this->assertInstanceOf('BrsZfSloth\Definition\Definition', $def);
@@ -126,15 +121,10 @@ class DefinitionTest extends \PHPUnit_Framework_TestCase
 
     public function testCreateFromProvider()
     {
-        $definitionProvider = $this->getMock('BrsZfSloth\Definition\DefinitionProviderInterface');
-        $definitionProvider::staticExpects($this->any())
-            ->method('getDefinitionConfig')
-            ->will($this->returnValue([
-                'name' => 'testname',
-                'table' => 'testtable',
-            ]))
-        ;
-
+        $definitionProvider = new \BrsZfSlothTest\Definition\TestAsset\DefinitionProvider([
+            'name' => 'testname',
+            'table' => 'testtable',
+        ]);
         $def = new Definition($definitionProvider);
         $this->assertEquals('testname', $def->getName());
         $this->assertEquals('testtable', $def->getTable());
